@@ -1,0 +1,23 @@
+﻿@model ChatViewModel
+@{
+    ViewData["Title"] = "Чат";
+}
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <i class="bi bi-chat-heart-fill text-success"
+               style="font-size:4rem"></i>
+            <h4 class="fw-700 mt-3 mb-2">Чат байхгүй байна</h4>
+            <p class="text-muted mb-4">
+                Аль нэг зарын дэлгэрэнгүйд орж
+                <strong>"Холбоо барих"</strong> товч дарснаар
+                зарын эзэнтэй шууд яриа эхлүүлэх боломжтой.
+            </p>
+            <a asp-controller="Listings" asp-action="Index"
+                   class="btn btn-success rounded-pill px-5 fw-600">
+                <i class="bi bi-grid me-2"></i>Зарууд харах
+            </a>
+        </div>
+    </div>
+</div>

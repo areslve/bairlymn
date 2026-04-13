@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BairlyMN.Data/BairlyMN.Data.csproj" />
+  <Project Path="BairlyMN.Domain/BairlyMN.Domain.csproj" />
+  <Project Path="BairlyMN.Mvc/BairlyMN.Mvc.csproj" />
+  <Project Path="BairlyMN.Services/BairlyMN.Services.csproj" />
+</Solution>

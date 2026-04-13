@@ -1,0 +1,46 @@
+﻿@{
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+
+    bool IsActive(string c, string? a = null) =>
+        ctrl == c && (a == null || action == a);
+}
+
+<div style="background:#0f172a;border-bottom:1px solid #1e293b">
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center gap-1 py-2 overflow-auto"
+             style="-webkit-overflow-scrolling:touch">
+
+            <span class="text-white-50 small me-2 flex-shrink-0 fw-600">
+                <i class="bi bi-shield-check text-success me-1"></i>Админ
+            </span>
+
+            @foreach (var (label, c, a, icon) in new[]{
+                ("Самбар",    "Admin","Dashboard","bi-speedometer2"),
+                ("Зарууд",    "Admin","Listings", "bi-grid"),
+                ("Баннер",    "Admin","Banners",  "bi-images"),
+                ("Хэрэглэгч","Admin","Users",     "bi-people"),
+            })
+            {
+                var isAct = IsActive(c, a);
+                <a asp-controller="@c" asp-action="@a"
+                       class="d-flex align-items-center gap-1 px-3 py-1 rounded-3
+                    text-decoration-none flex-shrink-0"
+                       style="font-size:.82rem;font-weight:600;white-space:nowrap;
+                    @(isAct
+                                         ? "background:rgba(22,163,74,.2);color:#4ade80"
+                                         : "color:rgba(255,255,255,.5)")">
+                    <i class="bi @icon"></i>@label
+                </a>
+            }
+
+            <a asp-controller="Home" asp-action="Index"
+                   class="ms-auto d-flex align-items-center gap-1 px-3 py-1 rounded-3
+                text-decoration-none flex-shrink-0"
+                   style="font-size:.82rem;color:rgba(255,255,255,.35)">
+                <i class="bi bi-box-arrow-left"></i>
+                <span class="d-none d-sm-inline">Сайт руу</span>
+            </a>
+        </div>
+    </div>
+</div>

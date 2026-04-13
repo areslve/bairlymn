@@ -1,0 +1,748 @@
+﻿@model ListingCreateViewModel
+@{ ViewData["Title"] = "Зар нэмэх"; }
+
+<div class="bg-light py-3 border-bottom mb-4">
+    <div class="container">
+        <nav><ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" class="text-success">Нүүр</a>
+            </li>
+            <li class="breadcrumb-item active">Зар нэмэх</li>
+        </ol></nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header p-4"
+                     style="background:linear-gradient(135deg,#166534,#16a34a)">
+                    <h4 class="fw-700 text-white mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Шинэ зар нэмэх
+                    </h4>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <!-- STEP 1: Үндсэн мэдээлэл -->
+                        <div class="step-section mb-5">
+                            <div class="step-header">
+                                <div class="step-num">1</div>
+                                <div>
+                                    <h5 class="fw-700 mb-0">Үндсэн мэдээлэл</h5>
+                                    <small class="text-muted">Гарчиг, тайлбар, үнэ</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Title" class="form-label fw-600">
+                                    Гарчиг <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Title" class="form-control rounded-3"
+                                       placeholder="Жишээ: Баянзүрх дүүрэгт 2 өрөө орон сууц" />
+                                <span asp-validation-for="Title" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Description" class="form-label fw-600">
+                                    Тайлбар <span class="text-danger">*</span>
+                                </label>
+                                <textarea asp-for="Description" class="form-control rounded-3"
+                                          rows="5"
+                                          placeholder="Үл хөдлөх хөрөнгийн дэлгэрэнгүй мэдээлэл..."></textarea>
+                                <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="PropertyType" class="form-label fw-600">
+                                        Үл хөдлөхийн төрөл <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="PropertyType" class="form-select rounded-3"
+                                            id="propertyTypeSelect"
+                                            onchange="onPropertyTypeChange(this.value)">
+                                        <option value="">— Сонгоно уу —</option>
+                                        <option value="1">🏢 Орон сууц</option>
+                                        <option value="2">🏠 Байшин</option>
+                                        <option value="3">🗺️ Газар</option>
+                                        <option value="4">💼 Оффис</option>
+                                        <option value="5">📦 Агуулах</option>
+                                        <option value="6">📋 Бусад</option>
+                                    </select>
+                                    <span asp-validation-for="PropertyType" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="TransactionType" class="form-label fw-600">
+                                        Гүйлгээний төрөл <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="TransactionType" class="form-select rounded-3"
+                                            id="transactionTypeSelect"
+                                            onchange="onTransactionTypeChange(this.value)">
+                                        <option value="">— Сонгоно уу —</option>
+                                        <option value="1">💰 Худалдах</option>
+                                        <option value="2">🔑 Түрээслэх</option>
+                                    </select>
+                                    <span asp-validation-for="TransactionType" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="Price" class="form-label fw-600">
+                                        Үнэ (₮) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input asp-for="Price" type="number"
+                                               class="form-control rounded-start-3"
+                                               placeholder="0" min="0" />
+                                        <span class="input-group-text rounded-end-3 bg-light fw-600">₮</span>
+                                    </div>
+                                    <span asp-validation-for="Price" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="Area" class="form-label fw-600">Нийт талбай (м²)</label>
+                                    <div class="input-group">
+                                        <input asp-for="Area" type="number"
+                                               class="form-control rounded-start-3"
+                                               placeholder="0" step="0.1" min="0" />
+                                        <span class="input-group-text rounded-end-3 bg-light fw-600">м²</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                       <!-- STEP 2: Байршил -->
+                    <div class="step-section mb-5">
+                        <div class="step-header">
+                            <div class="step-num">2</div>
+                            <div>
+                                <h5 class="fw-700 mb-0">Байршил</h5>
+                                <small class="text-muted">
+                                    Хот/Аймаг → Дүүрэг/Сум → Хороо/Баг
+                                </small>
+                            </div>
+                        </div>
+
+                        @await Html.PartialAsync("_LocationPicker", new BairlyMN.Mvc.ViewModels.LocationPickerModel
+                        {
+                            Prefix     = "create",
+                            SelectedId = null,
+                            ShowLabel  = true
+                        })
+
+                        <div class="mt-3">
+                            <label asp-for="Address" class="form-label fw-600">
+                                Дэлгэрэнгүй хаяг
+                            </label>
+                            <input asp-for="Address"
+                                   class="form-control rounded-3"
+                                   placeholder="Гудамж, байр, тоот дугаар..." />
+                        </div>
+                    </div>
+
+            
+
+                        <!-- STEP 3: Дэлгэрэнгүй мэдээлэл -->
+                        <div class="step-section mb-5">
+                            <div class="step-header">
+                                <div class="step-num">3</div>
+                                <div>
+                                    <h5 class="fw-700 mb-0">Дэлгэрэнгүй мэдээлэл</h5>
+                                    <small class="text-muted">
+                                        Үл хөдлөхийн төрлөөс хамаарч
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div id="noTypeMsg" class="text-center py-4 text-muted">
+                                <i class="bi bi-arrow-up-circle fs-2 d-block mb-2 opacity-25"></i>
+                                <p class="small">
+                                    Үл хөдлөхийн төрлийг сонгосны дараа
+                                    нэмэлт мэдээлэл гарна
+                                </p>
+                            </div>
+
+                            <!-- ── ОРОН СУУЦ ── -->
+                            <div id="aptSection" class="d-none detail-section">
+                                <div class="p-4 bg-light rounded-4">
+                                    <h6 class="fw-700 mb-4 text-success">
+                                        <i class="bi bi-building me-2"></i>Орон сууцны мэдээлэл
+                                    </h6>
+
+                                    <!-- Хажуу өрөо — зөвхөн түрээс -->
+                                    <div id="sharedSection" class="d-none">
+                                        <div class="alert rounded-3 mb-4 d-flex align-items-center gap-3"
+                                             style="background:#eff6ff;border:1px solid #bfdbfe">
+                                            <i class="bi bi-people-fill text-primary fs-4 flex-shrink-0"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-600 text-primary mb-1">
+                                                    Хуваалцсан орон сууц (Хажуу өрөо)
+                                                </div>
+                                                <div class="form-check mb-0">
+                                                    <input name="ApartmentDetails.IsSharedApartment"
+                                                           type="checkbox"
+                                                           class="form-check-input"
+                                                           id="chkShared"
+                                                           value="true"
+                                                           onchange="toggleSharedFields(this)" />
+                                                    <label class="form-check-label small"
+                                                           for="chkShared">
+                                                        Хуваалцсан орон сууц (өрөө тусдаа)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="sharedFields" class="d-none mb-4">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-600 small">
+                                                        Нээлттэй өрөөний тоо
+                                                    </label>
+                                                    <input name="ApartmentDetails.AvailableRooms"
+                                                           type="number" min="1"
+                                                           class="form-control rounded-3"
+                                                           placeholder="1" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Байршил -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">
+                                                Байршил
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Давхар</label>
+                                            <input name="ApartmentDetails.Floor"
+                                                   type="number" min="1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="3" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Нийт давхар</label>
+                                            <input name="ApartmentDetails.TotalFloors"
+                                                   type="number" min="1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="9" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Өрөөнүүд -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">
+                                                Өрөөнүүд
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Өрөөний тоо</label>
+                                            <input name="ApartmentDetails.Rooms"
+                                                   type="number" min="1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="2" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Зочны өрөo
+                                            </label>
+                                            <input name="ApartmentDetails.LivingRooms"
+                                                   type="number" min="0"
+                                                   class="form-control rounded-3"
+                                                   placeholder="1" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Угаалгын өрөo
+                                            </label>
+                                            <input name="ApartmentDetails.Bathrooms"
+                                                   type="number" min="0"
+                                                   class="form-control rounded-3"
+                                                   placeholder="1" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Цонхны тоо
+                                            </label>
+                                            <input name="ApartmentDetails.DoorsCount"
+                                                   type="number" min="0"
+                                                   class="form-control rounded-3"
+                                                   placeholder="2" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Талбайнууд -->
+                                   <!--  <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">
+                                                Талбайнууд
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Амьдрах (м²)
+                                            </label>
+                                            <input name="ApartmentDetails.LivingArea"
+                                                   type="number" step="0.1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="45" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Гал тогоо (м²)
+                                            </label>
+                                            <input name="ApartmentDetails.KitchenArea"
+                                                   type="number" step="0.1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="8" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Тагт (м²)</label>
+                                            <input name="ApartmentDetails.BalconyArea"
+                                                   type="number" step="0.1"
+                                                   class="form-control rounded-3"
+                                                   placeholder="5" />
+                                        </div>
+                                    </div>-->
+
+                                    <!-- Барилгын мэдээлэл -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">
+                                                Барилгын мэдээлэл
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Баригдсан он
+                                            </label>
+                                            <input name="ApartmentDetails.BuildYear"
+                                                   type="number" min="1960" max="2030"
+                                                   class="form-control rounded-3"
+                                                   placeholder="2015" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Нөхцөл байдал
+                                            </label>
+                                            <select name="ApartmentDetails.Condition"
+                                                    class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var c in new[]{"Шинэ","Засварласан","Дунд зэрэг","Засвар шаардлагатай"})
+                                                { <option>@c</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">
+                                                Барилгын материал
+                                            </label>
+                                            <select name="ApartmentDetails.BuildingType"
+                                                    class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var t in new[]{"Бүрэн цутгамал","Сендвич","Монолит","Угсармал","Бусад"})
+                                                { <option>@t</option> }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Дотоод -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">
+                                                Дотоод тохижилт
+                                            </h6>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <label class="form-label fw-600 small">
+                                                Шалны материал
+                                            </label>
+                                            <select name="ApartmentDetails.FloorMaterial"
+                                                    class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var f in new[]{"Паркет","Ламинат","Плита","Хулдаас","Цемент","Бусад"})
+                                                { <option>@f</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <label class="form-label fw-600 small">
+                                                Цонхны төрөл
+                                            </label>
+                                            <select name="ApartmentDetails.WindowType"
+                                                    class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var w in new[]{"Вакум","Модон вакум","Модон","Давхар шил"})
+                                                { <option>@w</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <label class="form-label fw-600 small">
+                                                Халаалтын төрөл
+                                            </label>
+                                            <select name="ApartmentDetails.HeatingType"
+                                                    class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var h in new[]{"Төвийн халаалт","Өөрийн зуух","Хийн","Цахилгаан","Хоорондын"})
+                                                { <option>@h</option> }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Тохиромж -->
+                                    <div class="mb-4">
+                                        <h6 class="fw-600 small text-muted text-uppercase mb-3">
+                                            Тохиромж
+                                        </h6>
+                                        <div class="row g-2">
+                                            @foreach (var (name, label, id) in new (string,string,string)[]{
+                                                ("ApartmentDetails.HasBalcony","🏗️ Тагт","chkBalcony"),
+                                                ("ApartmentDetails.HasParking","🅿️ Зогсоол","chkParking"),
+                                                ("ApartmentDetails.HasElevator","🛗 Лифт","chkElevator"),
+                                                ("ApartmentDetails.HasStorage","📦 Агуулах өрөө","chkStorage"),
+                                                ("ApartmentDetails.HasSecurity","🔒 Харуул","chkSecurity"),
+                                                ("ApartmentDetails.IsFurnished","🛋️ Тавилгатай","chkFurnished")
+                                            })
+                                            {
+                                                <div class="col-6 col-md-4">
+                                                    <div class="form-check p-3 bg-white rounded-3 border">
+                                                        <input name="@name" type="checkbox"
+                                                               class="form-check-input"
+                                                               id="@id" value="true" />
+                                                        <label class="form-check-label fw-500 small"
+                                                               for="@id">@label</label>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Түрээсийн нөхцөл — зөвхөн түрээс -->
+                                    <div id="rentConditions" class="d-none">
+                                        <h6 class="fw-600 small text-muted text-uppercase mb-3">
+                                            Түрээсийн нөхцөл
+                                        </h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-600 small">
+                                                    Хамгийн бага хугацаа (сар)
+                                                </label>
+                                                <input name="ApartmentDetails.MinRentMonths"
+                                                       type="number" min="1"
+                                                       class="form-control rounded-3"
+                                                       placeholder="6" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label fw-600 small d-block mb-2">
+                                                    Зөвшөөрсөн
+                                                </label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input name="ApartmentDetails.AllowsPets"
+                                                               type="checkbox"
+                                                               class="form-check-input"
+                                                               id="chkPets" value="true" />
+                                                        <label class="form-check-label small" for="chkPets">
+                                                            🐾 Тэжээвэр амьтан
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input name="ApartmentDetails.AllowsSmoking"
+                                                               type="checkbox"
+                                                               class="form-check-input"
+                                                               id="chkSmoke" value="true" />
+                                                        <label class="form-check-label small" for="chkSmoke">
+                                                            🚬 Тамхи татах
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── БАЙШИН ── -->
+                            <div id="houseSection" class="d-none detail-section">
+                                <div class="p-4 bg-light rounded-4">
+                                    <h6 class="fw-700 mb-4 text-success">
+                                        <i class="bi bi-house-door me-2"></i>Байшингийн мэдээлэл
+                                    </h6>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-12">
+                                            <h6 class="fw-600 small text-muted text-uppercase mb-2">Үндсэн</h6>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Өрөөний тоо</label>
+                                            <input name="HouseDetailsVM.Rooms" type="number" min="1"
+                                                   class="form-control rounded-3" placeholder="4" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Угаалгын өрөo</label>
+                                            <input name="HouseDetailsVM.Bathrooms" type="number" min="0"
+                                                   class="form-control rounded-3" placeholder="2" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Давхар</label>
+                                            <input name="HouseDetailsVM.Floors" type="number" min="1"
+                                                   class="form-control rounded-3" placeholder="2" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Газрын талбай (м²)</label>
+                                            <input name="HouseDetailsVM.LandArea" type="number" step="0.1"
+                                                   class="form-control rounded-3" placeholder="500" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Баригдсан он</label>
+                                            <input name="HouseDetailsVM.BuildYear" type="number"
+                                                   min="1960" max="2030"
+                                                   class="form-control rounded-3" placeholder="2010" />
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Нөхцөл байдал</label>
+                                            <select name="HouseDetailsVM.Condition" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var c in new[]{"Шинэ","Сайн","Засварласан","Дунд зэрэг","Засвар шаардлагатай"})
+                                                { <option>@c</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Барилгын материал</label>
+                                            <select name="HouseDetailsVM.BuildingType" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var t in new[]{"Тоосго","Панел","Монолит","Модон","Бусад"})
+                                                { <option>@t</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Дээврийн төрөл</label>
+                                            <select name="HouseDetailsVM.RoofType" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var r in new[]{"Метал","Шифер","Черепица","Бетон","Бусад"})
+                                                { <option>@r</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Халаалт</label>
+                                            <select name="HouseDetailsVM.HeatingType" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var h in new[]{"Төвийн","Өөрийн зуух","Хийн","Цахилгаан"})
+                                                { <option>@h</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <label class="form-label fw-600 small">Шалны материал</label>
+                                            <select name="HouseDetailsVM.FloorMaterial" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var f in new[]{"Паркет","Ламинат","Плита","Хивс","Бетон"})
+                                                { <option>@f</option> }
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="fw-600 small text-muted text-uppercase mb-3">Тохиромж</h6>
+                                    <div class="row g-2">
+                                        @foreach (var (name, label, id) in new (string,string,string)[]{
+                                            ("HouseDetailsVM.HasGarage","🚗 Гараж","hChkGarage"),
+                                            ("HouseDetailsVM.HasGarden","🌿 Цэцэрлэг","hChkGarden"),
+                                            ("HouseDetailsVM.HasFence","🏗️ Хашаа","hChkFence"),
+                                            ("HouseDetailsVM.HasBasement","🏚️ Подвал","hChkBasement"),
+                                            ("HouseDetailsVM.IsFurnished","🛋️ Тавилгатай","hChkFurnished"),
+                                        })
+                                        {
+                                            <div class="col-6 col-md-4">
+                                                <div class="form-check p-3 bg-white rounded-3 border">
+                                                    <input name="@name" type="checkbox"
+                                                           class="form-check-input"
+                                                           id="@id" value="true" />
+                                                    <label class="form-check-label fw-500 small"
+                                                           for="@id">@label</label>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── ГАЗАР ── -->
+                            <div id="landSection" class="d-none detail-section">
+                                <div class="p-4 bg-light rounded-4">
+                                    <h6 class="fw-700 mb-4 text-success">
+                                        <i class="bi bi-map me-2"></i>Газрын мэдээлэл
+                                    </h6>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-600 small">Бүсчлэлийн төрөл</label>
+                                            <select name="LandDetailsVM.ZoningType" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var z in new[]{"Орон сууцны","Үйлдвэрлэлийн","Хөдөө аж ахуйн","Арилжааны","Нийтийн"})
+                                                { <option>@z</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-600 small">Эрхийн төрөл</label>
+                                            <select name="LandDetailsVM.LandOwnershipType" class="form-select rounded-3">
+                                                <option value="">— Сонгоно уу —</option>
+                                                @foreach (var o in new[]{"Эзэмших эрх","Өмчлөх эрх"})
+                                                { <option>@o</option> }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-600 small">Кадастрын дугаар</label>
+                                            <input name="LandDetailsVM.CadastralNumber"
+                                                   class="form-control rounded-3"
+                                                   placeholder="09-01-0001-0001" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-600 small">Газрын зориулалт</label>
+                                            <input name="LandDetailsVM.LandUsePurpose"
+                                                   class="form-control rounded-3"
+                                                   placeholder="Орон сууц барих, хөдөө аж ахуй..." />
+                                        </div>
+                                       
+                                    </div>
+
+                                    <h6 class="fw-600 small text-muted text-uppercase mb-3">Дэд бүтэц</h6>
+                                    <div class="row g-2">
+                                        @foreach (var (name, label, id) in new (string,string,string)[]{
+                                            ("LandDetailsVM.HasRoadAccess","🛣️ Замтай","lChkRoad"),
+                                            ("LandDetailsVM.HasElectricity","⚡ Цахилгаантай","lChkElec"),
+                                            ("LandDetailsVM.HasWater","💧 Усны хангамжтай","lChkWater"),
+                                            ("LandDetailsVM.HasSewer","🚰 Бохир усны систем","lChkSewer"),
+                                            ("LandDetailsVM.HasGas","🔥 Хий","lChkGas"),
+                                            ("LandDetailsVM.HasFence","🏗️ Хашаатай","lChkFence")
+                                        })
+                                        {
+                                            <div class="col-6 col-md-4">
+                                                <div class="form-check p-3 bg-white rounded-3 border">
+                                                    <input name="@name" type="checkbox"
+                                                           class="form-check-input"
+                                                           id="@id" value="true" />
+                                                    <label class="form-check-label fw-500 small"
+                                                           for="@id">@label</label>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Зургууд -->
+                        <div class="step-section mb-5">
+                            <div class="step-header">
+                                <div class="step-num">4</div>
+                                <div>
+                                    <h5 class="fw-700 mb-0">Зургууд</h5>
+                                    <small class="text-muted">
+                                        Дээд тал нь 10 зураг, .jpg .png .webp
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="image-upload-area"
+                                 onclick="document.getElementById('imgInput').click()">
+                                <i class="bi bi-cloud-arrow-up fs-1 text-success d-block mb-2"></i>
+                                <p class="fw-600 mb-1">
+                                    Зургаа энд чирж тавих эсвэл дарна уу
+                                </p>
+                                <p class="text-muted small mb-3">
+                                    .jpg .png .webp — дээд тал нь 10MB/зураг
+                                </p>
+                                <span class="btn btn-outline-success rounded-pill px-4">
+                                    <i class="bi bi-images me-2"></i>Зураг сонгох
+                                </span>
+                                <input type="file" name="Images" id="imgInput"
+                                       multiple accept="image/jpeg,image/png,image/webp"
+                                       class="d-none"
+                                       onchange="previewImages(this)" />
+                            </div>
+                            <div id="imgPreview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-flex gap-3 justify-content-end pt-4 border-top">
+                            <a asp-controller="Listings" asp-action="Index"
+                               class="btn btn-light rounded-pill px-4">Болих</a>
+                            <button type="submit"
+                                    class="btn btn-success rounded-pill px-5 fw-700 py-2">
+                                <i class="bi bi-check-circle me-2"></i>Зар нийтлэх
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+.step-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+}
+.step-num {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #166534, #16a34a);
+    color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; flex-shrink: 0;
+}
+.step-section {
+    border-left: 3px solid #dcfce7;
+    padding-left: 24px;
+}
+.detail-section { animation: fadeInUp .3s ease; }
+.form-check.p-3 { transition: all .15s; cursor: pointer; }
+.form-check.p-3:hover { border-color: #16a34a !important; background: #f0fdf4 !important; }
+.form-check.p-3:has(input:checked) {
+    border-color: #16a34a !important;
+    background: #dcfce7 !important;
+}
+</style>
+}
+
+      @* Scripts хэсэгт — form-ийн Scripts section дотор байх ёстой *@
+        @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+        <script src="~/js/location-picker.js" asp-append-version="true"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            LocationPicker.init({
+                prefix:     'create',
+                selectedId: null
+            });
+        });
+        
+let currentPropertyType = '';
+let currentTransactionType = '';
+
+function onPropertyTypeChange(val) {
+    currentPropertyType = val;
+    showDetailSection(val);
+}
+
+function onTransactionTypeChange(val) {
+    currentTransactionType = val;
+    // Rental extras
+    const rentConds = document.getElementById('rentConditions');
+    const sharedSec = document.getElementById('sharedSection');
+    const isRent = val === '2';
+    if (rentConds) rentConds.classList.toggle('d-none', !isRent);
+    if (sharedSec) sharedSec.classList.toggle('d-none', !isRent);
+}
+
+function showDetailSection(val) {
+    document.querySelectorAll('.detail-section').forEach(el => el.classList.add('d-none'));
+    document.getElementById('noTypeMsg').classList.toggle('d-none', !!val);
+
+    const map = { '1': 'aptSection', '2': 'houseSection', '3': 'landSection' };
+    const target = map[val];
+    if (target) document.getElementById(target)?.classList.remove('d-none');
+}
+
+function toggleSharedFields(cb) {
+    const fields = document.getElementById('sharedFields');
+    if (fields) fields.classList.toggle('d-none', !cb.checked);
+}
+</script>
+}

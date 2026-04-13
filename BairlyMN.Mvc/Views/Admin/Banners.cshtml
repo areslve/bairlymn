@@ -1,0 +1,150 @@
+﻿@model IEnumerable<BairlyMN.Data.Entities.Banner>
+@{
+    ViewData["Title"] = "Баннер удирдах";
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container-fluid px-4 py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-800 mb-0">Баннер удирдах</h4>
+                <p class="text-muted small mb-0">
+                    Нийт @Model.Count() баннер
+                    <span class="text-success ms-1">
+                        (@Model.Count(b => b.IsActive) идэвхтэй)
+                    </span>
+                </p>
+            </div>
+            <a asp-controller="Admin" asp-action="CreateBanner"
+                   class="btn btn-success rounded-pill fw-600 px-4">
+                <i class="bi bi-plus me-1"></i>Баннер нэмэх
+            </a>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="card border-0 rounded-4 shadow-sm">
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="bi bi-images fs-1 d-block mb-3 opacity-40"></i>
+                    <h5 class="fw-700">Баннер байхгүй байна</h5>
+                    <p class="small">Нүүр хуудаст гарах баннер нэмнэ үү</p>
+                    <a asp-controller="Admin" asp-action="CreateBanner"
+                           class="btn btn-success rounded-pill px-5 fw-600">
+                        <i class="bi bi-plus me-2"></i>Баннер нэмэх
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var b in Model)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 rounded-4 shadow-sm overflow-hidden h-100">
+
+                            <!-- Preview -->
+                            <div class="position-relative" style="height:170px;background:#0f172a">
+                                <img src="@b.ImagePath" class="w-100 h-100"
+                                     style="object-fit:cover;opacity:.8"
+                                     onerror="this.style.display='none'" />
+
+                                <!-- Overlay text -->
+                                <div class="position-absolute bottom-0 start-0 end-0 p-3"
+                                     style="background:linear-gradient(to top,rgba(0,0,0,.75),transparent)">
+                                    <div class="text-white fw-700 small text-truncate">
+                                        @b.Title
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(b.Subtitle))
+                                    {
+                                        <div class="text-white-50" style="font-size:.75rem">
+                                            @b.Subtitle
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Status -->
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <span class="badge rounded-pill fw-600"
+                                          style="@(b.IsActive
+                                                                                                                              ? "background:#16a34a;color:white"
+                                                                                                                              : "background:rgba(0,0,0,.5);color:rgba(255,255,255,.6)")
+                                        font-size:.7rem">
+                                        @(b.IsActive ? "● Идэвхтэй" : "○ Идэвхгүй")
+                                    </span>
+                                </div>
+
+                                <!-- Sort order -->
+                                <div class="position-absolute top-0 start-0 p-2">
+                                    <span class="badge rounded-pill"
+                                          style="background:rgba(0,0,0,.45);color:white;
+                                        font-size:.68rem">
+                                        #@b.SortOrder
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="card-body p-3">
+                                @if (!string.IsNullOrEmpty(b.LinkUrl))
+                                {
+                                    <a href="@b.LinkUrl" target="_blank"
+                                           class="text-success small text-decoration-none
+                                        text-truncate d-block mb-2">
+                                        <i class="bi bi-link-45deg me-1"></i>@b.LinkUrl
+                                    </a>
+                                }
+
+                                <div class="text-muted small mb-3">
+                                    @if (b.StartsAt.HasValue || b.EndsAt.HasValue)
+                                    {
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        @if (b.StartsAt.HasValue)
+                                        {
+                                            @b.StartsAt.Value.ToString("MM/dd")
+                                        }
+                                        @if (b.EndsAt.HasValue)
+                                        {
+                                            <span> → @b.EndsAt.Value.ToString("MM/dd")</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-infinity me-1"></i>
+                                        <span>Хугацаагүй</span>
+                                    }
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Admin"
+                                           asp-action="EditBanner"
+                                           asp-route-id="@b.Id"
+                                           class="btn btn-sm flex-fill rounded-3 fw-600"
+                                           style="background:#dbeafe;color:#1d4ed8;
+                                        border:1px solid #bfdbfe">
+                                        <i class="bi bi-pencil me-1"></i>Засах
+                                    </a>
+                                    <form asp-controller="Admin"
+                                          asp-action="DeleteBanner"
+                                          asp-route-id="@b.Id"
+                                          method="post"
+                                          onsubmit="return confirm('Баннерыг устгахдаа итгэлтэй байна уу?')">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm rounded-3"
+                                                style="background:#fee2e2;color:#dc2626;
+                                            border:1px solid #fecaca">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

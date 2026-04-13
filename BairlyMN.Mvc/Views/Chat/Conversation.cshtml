@@ -1,0 +1,419 @@
+﻿@model ChatViewModel
+@{
+    ViewData["Title"] = "Чат";
+    var conv = Model.ActiveConversation;
+    var other = conv?.InitiatorId == Model.CurrentUserId
+        ? conv?.Participant
+        : conv?.Initiator;
+}
+
+<div style="height:calc(100vh - 66px);overflow:hidden;background:#f8fafc">
+    <div class="container-fluid h-100 p-0">
+        <div class="row g-0 h-100">
+
+            <!-- ── Conversation list ──────────────────────────────── -->
+            <div class="col-md-4 col-lg-3 h-100 d-flex flex-column bg-white border-end">
+
+                <!-- Header -->
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between"
+                     style="background:white">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-chat-dots-fill text-success fs-5"></i>
+                        <span class="fw-700">Чат</span>
+                        @if (Model.UnreadCount > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill"
+                                  style="font-size:.7rem">@Model.UnreadCount</span>
+                        }
+                    </div>
+                    <a asp-controller="Home" asp-action="Index"
+                           class="btn btn-sm btn-light rounded-circle"
+                           style="width:32px;height:32px;display:flex;align-items:center;justify-content:center"
+                           title="Нүүр хуудас">
+                        <i class="bi bi-house small"></i>
+                    </a>
+                </div>
+
+                <!-- Conversation list -->
+                <div class="overflow-auto flex-grow-1">
+                    @if (!Model.Conversations.Any())
+                    {
+                        <div class="text-center py-5 px-3 text-muted">
+                            <i class="bi bi-chat-square fs-2 d-block mb-3 opacity-50"></i>
+                            <p class="small fw-500">Яриа байхгүй байна</p>
+                            <p class="small opacity-75">
+                                Зарын дэлгэрэнгүйд орж
+                                "Холбоо барих" дарна уу
+                            </p>
+                            <a asp-controller="Listings" asp-action="Index"
+                                   class="btn btn-sm btn-success rounded-pill px-3 mt-2">
+                                Зарууд харах
+                            </a>
+                        </div>
+                    }
+
+                    @foreach (var c in Model.Conversations)
+                    {
+                        var o = c.InitiatorId == Model.CurrentUserId ? c.Participant : c.Initiator;
+                        var last = c.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault();
+                        var isActive = conv?.Id == c.Id;
+                        var hasUnread = last != null
+                            && last.SenderId != Model.CurrentUserId
+                            && last.Status != BairlyMN.Domain.Enums.MessageStatus.Read;
+
+                        <a asp-controller="Chat" asp-action="Conversation"
+                               asp-route-id="@c.Id"
+                               class="d-flex align-items-center gap-3 p-3 text-decoration-none
+                            border-bottom conv-item @(isActive ? "active" : "")">
+                            <div class="position-relative flex-shrink-0">
+                                <img src="@(o?.AvatarPath ?? "/img/default-avatar.svg")"
+                                     class="rounded-circle"
+                                     width="46" height="46"
+                                     style="object-fit:cover"
+                                     onerror="this.src='/img/default-avatar.svg'" />
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-600 text-dark small">
+                                        @o?.DisplayName
+                                    </span>
+                                    <span class="text-muted flex-shrink-0"
+                                          style="font-size:10px">
+                                        @c.LastMessageAt.ToString("HH:mm")
+                                    </span>
+                                </div>
+                                @if (c.Listing != null)
+                                {
+                                    <div class="text-success text-truncate"
+                                         style="font-size:11px">
+                                        <i class="bi bi-house me-1"></i>
+                                        @(c.Listing.Title?.Length > 25
+                                            ? c.Listing.Title.Substring(0, 25) + "..."
+                                            : c.Listing.Title)
+                                    </div>
+                                }
+                                @if (last != null)
+                                {
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <p class="text-muted mb-0 text-truncate"
+                                               style="font-size:.78rem;
+                                            @(hasUnread ? "font-weight:600;color:#1e293b!important" : "")">
+                                            @(last.SenderId == Model.CurrentUserId ? "Та: " : "")
+                                            @(last.Content.Length > 30
+                                                ? last.Content.Substring(0, 30) + "..."
+                                                : last.Content)
+                                        </p>
+                                        @if (hasUnread)
+                                        {
+                                            <span class="badge bg-success rounded-circle flex-shrink-0 ms-1"
+                                                  style="width:8px;height:8px;padding:0"></span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- ── Chat window ────────────────────────────────────── -->
+            <div class="col-md-8 col-lg-9 h-100 d-flex flex-column" style="background:#f8fafc">
+
+                @if (conv != null)
+                {
+                    <!-- Chat header -->
+                    <div class="bg-white border-bottom px-4 py-3 d-flex align-items-center gap-3">
+                        <div class="position-relative flex-shrink-0">
+                            <img src="@(other?.AvatarPath ?? "/img/default-avatar.svg")"
+                                 class="rounded-circle"
+                                 width="42" height="42"
+                                 style="object-fit:cover"
+                                 onerror="this.src='/img/default-avatar.svg'" />
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-700">@other?.DisplayName</div>
+                            @if (conv.Listing != null)
+                            {
+                                <a asp-controller="Listings" asp-action="Details"
+                                       asp-route-id="@conv.Listing.Id"
+                                       class="text-success text-decoration-none"
+                                       style="font-size:.8rem">
+                                    <i class="bi bi-house me-1"></i>@conv.Listing.Title
+                                </a>
+                            }
+                        </div>
+                        @if (conv.Listing != null)
+                        {
+                            var listThumb = conv.Listing.Images?.FirstOrDefault()?.ImagePath;
+                            @if (!string.IsNullOrEmpty(listThumb))
+                            {
+                                <a asp-controller="Listings" asp-action="Details"
+                                       asp-route-id="@conv.Listing.Id"
+                                       class="d-none d-md-block flex-shrink-0">
+                                    <img src="@listThumb"
+                                         class="rounded-3"
+                                         width="56" height="42"
+                                         style="object-fit:cover"
+                                         onerror="this.src='/img/no-image.svg'" />
+                                </a>
+                            }
+                        }
+                    </div>
+
+                    <!-- Messages area -->
+                    <div class="flex-grow-1 overflow-auto p-4 d-flex flex-column"
+                         id="msgList"
+                         style="gap:8px">
+
+                        @{
+                            DateTime? lastDate = null;
+                        }
+                        @foreach (var msg in Model.Messages)
+                        {
+                            var isOwn = msg.SenderId == Model.CurrentUserId;
+                            var msgDate = msg.SentAt.Date;
+                            var showDate = lastDate == null || lastDate != msgDate;
+                            lastDate = msgDate;
+
+                            if (showDate)
+                            {
+                                <div class="text-center my-2">
+                                    <span class="badge rounded-pill fw-500"
+                                          style="background:rgba(0,0,0,.08);
+                                        color:#64748b;font-size:.72rem">
+                                        @(msgDate == DateTime.UtcNow.Date
+                                            ? "Өнөөдөр"
+                                            : msgDate == DateTime.UtcNow.Date.AddDays(-1)
+                                                ? "Өчигдөр"
+                                                : msgDate.ToString("yyyy/MM/dd"))
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="d-flex @(isOwn ? "justify-content-end" : "justify-content-start")
+                                align-items-end gap-2">
+                                @if (!isOwn)
+                                {
+                                    <img src="@(msg.Sender?.AvatarPath ?? "/img/default-avatar.svg")"
+                                         class="rounded-circle flex-shrink-0 mb-1"
+                                         width="32" height="32"
+                                         style="object-fit:cover"
+                                         onerror="this.src='/img/default-avatar.svg'" />
+                                }
+                                <div style="max-width:65%">
+                                    <div class="message-bubble @(isOwn ? "own" : "other") rounded-4">
+                                        <p class="mb-0 lh-sm" style="white-space:pre-wrap">
+                                            @msg.Content
+                                        </p>
+                                        <div class="d-flex align-items-center gap-1 mt-1 @(isOwn ? "justify-content-end" : "")"
+                                             style="font-size:10px;opacity:.65">
+                                            <span>@msg.SentAt.ToString("HH:mm")</span>
+                                            @if (isOwn)
+                                            {
+                                                @if (msg.Status == BairlyMN.Domain.Enums.MessageStatus.Read)
+                                                {
+                                                    <i class="bi bi-check2-all"></i>
+                                                }
+                                                else
+                                                {
+
+                                                    <i class="bi bi-check2"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (isOwn)
+                                {
+                                    <img src="@(Model.Conversations.FirstOrDefault(c => c.Id == conv.Id)?
+                                                                                                              .Initiator?.AvatarPath ?? "/img/default-avatar.svg")"
+                                         class="rounded-circle flex-shrink-0 mb-1 d-none d-md-block"
+                                         width="32" height="32"
+                                         style="object-fit:cover"
+                                         onerror="this.src='/img/default-avatar.svg'" />
+                                }
+                            </div>
+                        }
+                        <div id="anchor"></div>
+                    </div>
+
+                    <!-- Input area -->
+                    <div class="bg-white border-top p-3">
+                        <div class="d-flex align-items-end gap-2">
+                            <div class="flex-grow-1 position-relative">
+                                <textarea id="msgInput"
+                                          class="form-control rounded-4"
+                                          rows="1"
+                                          placeholder="Мессеж бичих..."
+                                          style="resize:none;max-height:150px;
+                                padding-right:50px;
+                                border-color:#e2e8f0"
+                                          onkeydown="onEnter(event)"></textarea>
+                            </div>
+                            <button id="sendBtn"
+                                    class="btn btn-success rounded-circle flex-shrink-0
+                                d-flex align-items-center justify-content-center"
+                                    style="width:44px;height:44px"
+                                    onclick="send()">
+                                <i class="bi bi-send-fill" style="font-size:.9rem"></i>
+                            </button>
+                        </div>
+                        <div class="text-muted mt-2" style="font-size:.72rem">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Enter дарж илгээх · Shift+Enter шинэ мөр
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                        <div class="text-center">
+                            <div class="rounded-circle d-inline-flex align-items-center
+                                justify-content-center mb-3"
+                                 style="width:80px;height:80px;background:#f0fdf4">
+                                <i class="bi bi-chat-heart-fill text-success" style="font-size:2rem"></i>
+                            </div>
+                            <h5 class="fw-700 mb-1">Яриа сонгоно уу</h5>
+                            <p class="text-muted small">
+                                Зүүн талаас яриа сонгох эсвэл
+                                зарын дэлгэрэнгүйд орж яриа эхлүүлнэ үү
+                            </p>
+                            <a asp-controller="Listings" asp-action="Index"
+                                   class="btn btn-success rounded-pill px-4 fw-600">
+                                <i class="bi bi-search me-2"></i>Зарууд харах
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ME      = '@Model.CurrentUserId';
+        const CONV_ID = @(conv?.Id.ToString() ?? "0");
+
+        const conn = new signalR.HubConnectionBuilder()
+            .withUrl('/hubs/chat')
+            .withAutomaticReconnect([0, 1000, 3000, 5000])
+            .build();
+
+        // Connection state indicator
+        conn.onreconnecting(() => showConnStatus('Дахин холбогдож байна...', 'warning'));
+        conn.onreconnected(() => showConnStatus('Холбогдлоо', 'success'));
+        conn.onclose(() => showConnStatus('Холболт тасарлаа', 'danger'));
+
+        conn.on('ReceiveMessage', msg => {
+            appendMsg(msg);
+            scrollDown();
+            if (msg.senderId !== ME && CONV_ID > 0)
+                conn.invoke('MarkAsRead', CONV_ID).catch(() => {});
+        });
+
+        conn.on('MessagesRead', (convId, userId) => {
+            if (userId !== ME) {
+                document.querySelectorAll('.msg-status').forEach(el => {
+                    el.innerHTML = '<i class="bi bi-check2-all"></i>';
+                });
+            }
+        });
+
+        async function start() {
+            try {
+                await conn.start();
+                if (CONV_ID > 0) {
+                    await conn.invoke('JoinConversation', CONV_ID);
+                    scrollDown();
+                }
+            } catch (e) {
+                console.error('SignalR connection failed:', e);
+                setTimeout(start, 3000);
+            }
+        }
+
+        function appendMsg(msg) {
+            const isOwn  = msg.senderId === ME;
+            const anchor = document.getElementById('anchor');
+            const list   = document.getElementById('msgList');
+            if (!anchor) return;
+
+            const div = document.createElement('div');
+            div.className = `d-flex ${isOwn ? 'justify-content-end' : 'justify-content-start'} align-items-end gap-2`;
+            div.innerHTML = `
+                ${!isOwn ? `<img src="${msg.senderAvatar||'/img/default-avatar.svg'}"
+                                 class="rounded-circle flex-shrink-0 mb-1"
+                                 width="32" height="32" style="object-fit:cover"
+                                 onerror="this.src='/img/default-avatar.svg'" />` : ''}
+                <div style="max-width:65%">
+                    <div class="message-bubble ${isOwn?'own':'other'} rounded-4">
+                        <p class="mb-0 lh-sm" style="white-space:pre-wrap">${esc(msg.content)}</p>
+                        <div class="d-flex align-items-center gap-1 mt-1 ${isOwn?'justify-content-end':''}"
+                             style="font-size:10px;opacity:.65">
+                            <span>${msg.sentAt}</span>
+                            ${isOwn ? '<span class="msg-status"><i class="bi bi-check2"></i></span>' : ''}
+                        </div>
+                    </div>
+                </div>`;
+            list.insertBefore(div, anchor);
+        }
+
+        function esc(s) {
+            return s
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function scrollDown() {
+            document.getElementById('anchor')?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        let isSending = false;
+
+        async function send() {
+            if (isSending) return;
+            const input = document.getElementById('msgInput');
+            const text  = input.value.trim();
+            if (!text || !CONV_ID) return;
+
+            isSending = true;
+            const btn = document.getElementById('sendBtn');
+            btn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+            btn.disabled  = true;
+
+            try {
+                input.value       = '';
+                input.style.height = 'auto';
+                await conn.invoke('SendMessage', CONV_ID, text);
+            } catch (e) {
+                input.value = text; // restore on error
+                showToast('Мессеж илгээхэд алдаа гарлаа', 'danger');
+            } finally {
+                isSending       = false;
+                btn.innerHTML   = '<i class="bi bi-send-fill" style="font-size:.9rem"></i>';
+                btn.disabled    = false;
+                input.focus();
+            }
+        }
+
+        function onEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        }
+
+        // Auto-resize textarea
+        document.getElementById('msgInput')?.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        function showConnStatus(msg, type) {
+            showToast(msg, type);
+        }
+
+        start().catch(console.error);
+    </script>
+}

@@ -1,0 +1,233 @@
+﻿@model AdminListingsViewModel
+@{
+    ViewData["Title"] = "Зар удирдах";
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container-fluid px-4 py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-800 mb-0">Зар удирдах</h4>
+                <p class="text-muted small mb-0">
+                    Нийт <strong>@Model.Pagination.TotalCount</strong> зар
+                </p>
+            </div>
+            <a asp-controller="Listings" asp-action="Create"
+                   class="btn btn-success rounded-pill fw-600 px-4">
+                <i class="bi bi-plus me-1"></i>Зар нэмэх
+            </a>
+        </div>
+
+        <!-- Search & filter bar -->
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form method="get" asp-action="Listings" class="d-flex gap-2 flex-wrap">
+                    <div class="input-group" style="max-width:320px">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search small text-muted"></i>
+                        </span>
+                        <input type="text" name="search" value="@Model.Search"
+                               class="form-control border-start-0"
+                               placeholder="Гарчиг, и-мэйлээр хайх..." />
+                    </div>
+                    <button type="submit"
+                            class="btn btn-success rounded-3 px-4 fw-600">
+                        Хайх
+                    </button>
+                    @if (!string.IsNullOrEmpty(Model.Search))
+                    {
+                        <a asp-action="Listings"
+                               class="btn btn-light rounded-3">
+                            <i class="bi bi-x me-1"></i>Цэвэрлэх
+                        </a>
+                    }
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+            @if (!Model.Listings.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                    <p class="fw-600">Зар олдсонгүй</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background:#f8fafc">
+                            <tr>
+                                <th class="ps-4" style="@TH">Зар</th>
+                                <th style="@TH">Эзэн</th>
+                                <th style="@TH">Үнэ</th>
+                                <th style="@TH">Үзэлт</th>
+                                <th style="@TH">Огноо</th>
+                                <th style="@TH">Төлөв</th>
+                                <th class="pe-4 text-end" style="@TH">Үйлдэл</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var l in Model.Listings)
+                            {
+                                var thumb = l.Images?.FirstOrDefault()?.ImagePath;
+                                var typeLabel = l.PropertyType switch
+                                {
+                                    BairlyMN.Domain.Enums.PropertyType.Apartment => "Орон сууц",
+                                    BairlyMN.Domain.Enums.PropertyType.House => "Байшин",
+                                    BairlyMN.Domain.Enums.PropertyType.Land => "Газар",
+                                    BairlyMN.Domain.Enums.PropertyType.Office => "Оффис",
+                                    _ => "Бусад"
+                                };
+
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="@(thumb ?? "/img/no-image.svg")"
+                                                 class="rounded-3 flex-shrink-0"
+                                                 width="48" height="36"
+                                                 style="object-fit:cover"
+                                                 onerror="this.src='/img/no-image.svg'" />
+                                            <div>
+                                                <a asp-controller="Listings"
+                                                       asp-action="Details"
+                                                       asp-route-id="@l.Id"
+                                                       class="text-decoration-none text-dark fw-600 small"
+                                                       style="display:block;max-width:200px;
+                                                    white-space:nowrap;overflow:hidden;
+                                                    text-overflow:ellipsis"
+                                                       title="@l.Title">
+                                                    @l.Title
+                                                </a>
+                                                <span class="badge rounded-pill mt-1"
+                                                      style="background:#f0fdf4;color:#166534;
+                                                    font-size:.68rem">
+                                                    @typeLabel
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@(l.User?.AvatarPath ?? "/img/default-avatar.svg")"
+                                                 class="rounded-circle flex-shrink-0"
+                                                 width="28" height="28"
+                                                 style="object-fit:cover"
+                                                 onerror="this.src='/img/default-avatar.svg'" />
+                                            <div>
+                                                <div class="small fw-500 text-dark">
+                                                    @l.User?.DisplayName
+                                                </div>
+                                                <div class="text-muted" style="font-size:11px">
+                                                    @l.User?.Email
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="fw-700 small" style="color:#16a34a">
+                                        @l.Price.ToString("N0") ₮
+                                    </td>
+                                    <td class="text-muted small">
+                                        <i class="bi bi-eye me-1"></i>@l.ViewCount
+                                    </td>
+                                    <td class="text-muted small">
+                                        @l.CreatedAt.ToString("yyyy/MM/dd")
+                                    </td>
+                                    <td>
+                                        @{
+                                            var isActive = l.Status == BairlyMN.Domain.Enums.ListingStatus.Active;
+                                        }
+                                        <span class="badge rounded-pill"
+                                              style="@(isActive
+                                                                                                                                          ? "background:#dcfce7;color:#166534"
+                                                                                                                                          : "background:#f1f5f9;color:#64748b")
+                                            font-size:.72rem;font-weight:600">
+                                            @(isActive ? "● Идэвхтэй" : "○ Идэвхгүй")
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <!-- Toggle status -->
+                                            <form asp-action="ToggleListingStatus"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <button class="btn btn-sm rounded-3 fw-500"
+                                                        style="font-size:.75rem;
+                                                    @(isActive
+                                                                                                              ? "background:#fef9c3;color:#854d0e;border:1px solid #fde68a"
+                                                                                                              : "background:#dcfce7;color:#166534;border:1px solid #bbf7d0")"
+                                                        title="@(isActive ? "Идэвхгүй болгох" : "Идэвхжүүлэх")">
+                                                    <i class="bi bi-toggle-@(isActive ? "on" : "off")"></i>
+                                                </button>
+                                            </form>
+
+                                            <!-- Edit -->
+                                            <a asp-controller="Listings"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@l.Id"
+                                                   class="btn btn-sm rounded-3"
+                                                   style="font-size:.75rem;background:#dbeafe;
+                                                color:#1d4ed8;border:1px solid #bfdbfe"
+                                                   title="Засах">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+
+                                            <!-- Delete -->
+                                            <form asp-action="DeleteListing"
+                                                  method="post" class="d-inline"
+                                                  onsubmit="return confirm('Устгахдаа итгэлтэй байна уу?')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <button class="btn btn-sm rounded-3"
+                                                        style="font-size:.75rem;background:#fee2e2;
+                                                    color:#dc2626;border:1px solid #fecaca"
+                                                        title="Устгах">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.Pagination.TotalPages > 1)
+                {
+                    <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            @Model.Pagination.CurrentPage / @Model.Pagination.TotalPages хуудас
+                        </span>
+                        <nav>
+                            <ul class="pagination pagination-sm gap-1 mb-0">
+                                @for (int p = 1; p <= Model.Pagination.TotalPages; p++)
+                                {
+                                    <li class="page-item @(p == Model.Pagination.CurrentPage ? "active" : "")">
+                                        <a class="page-link rounded-3"
+                                           asp-action="Listings"
+                                           asp-route-search="@Model.Search"
+                                           asp-route-page="@p">@p</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    const string TH = "font-size:.72rem;font-weight:700;text-transform:uppercase;" +
+                      "letter-spacing:.08em;color:#64748b;padding:14px 16px;" +
+                      "border:none;white-space:nowrap";
+}

@@ -1,0 +1,151 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using BairlyMN.Data.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var avatar = User.FindFirst("AvatarPath")?.Value;
+    var displayName = User.FindFirst("DisplayName")?.Value ?? User.Identity?.Name ?? "Хэрэглэгч";
+    var isVerified = User.FindFirst("IsVerified")?.Value == "True";
+    var avatarSrc = string.IsNullOrEmpty(avatar) ? "/img/default-avatar.svg" : avatar;
+
+    <div class="d-flex align-items-center gap-2">
+
+        <!-- Chat badge -->
+        <a asp-controller="Chat" asp-action="Index"
+               class="btn btn-light rounded-circle position-relative"
+               style="width:38px;height:38px;display:flex;align-items:center;justify-content:center"
+               title="Чат">
+            <i class="bi bi-chat-dots fs-6"></i>
+            <span class="badge bg-danger position-absolute top-0 start-100
+            translate-middle rounded-pill d-none"
+                  id="chatBadge" style="font-size:9px;min-width:18px">0</span>
+        </a>
+
+        <!-- User dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-light rounded-pill d-flex align-items-center gap-2 px-3"
+                    style="height:38px"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false">
+                <img src="@avatarSrc"
+                     class="rounded-circle flex-shrink-0"
+                     width="26" height="26"
+                     style="object-fit:cover"
+                     onerror="this.src='/img/default-avatar.svg'" />
+                <span class="fw-500 d-none d-md-inline small">
+                    @(displayName.Length > 14
+                        ? displayName.Substring(0, 14) + "…"
+                        : displayName)
+                </span>
+                <i class="bi bi-chevron-down" style="font-size:9px;opacity:.6"></i>
+            </button>
+
+            <!--
+                dropdown-menu-end    → desktop баруун талд зэрэгцэнэ
+                mobile-dropdown-fix  → утсан дээр position override
+            -->
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-1 mobile-dropdown-fix"
+                style="min-width:220px;padding:8px">
+
+                <!-- User info header -->
+                <li class="px-3 py-2 mb-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="@avatarSrc"
+                             class="rounded-circle flex-shrink-0"
+                             width="38" height="38"
+                             style="object-fit:cover;border:2px solid #dcfce7"
+                             onerror="this.src='/img/default-avatar.svg'" />
+                        <div class="overflow-hidden">
+                            <div class="fw-700 small text-truncate">@displayName</div>
+                            <div class="text-muted" style="font-size:11px">
+                                @if (isVerified)
+                                {
+                                    <span class="text-info">
+                                        <i class="bi bi-patch-check-fill me-1"></i>Баталгаажсан
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>@User.Identity?.Name?.Split('@')[0]</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><hr class="dropdown-divider my-1" /></li>
+
+                <li>
+                    <a class="dropdown-item rounded-3 d-flex align-items-center gap-2"
+                           asp-controller="Profile" asp-action="Index">
+                        <i class="bi bi-person-circle text-success"></i>Профайл
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item rounded-3 d-flex align-items-center gap-2"
+                           asp-controller="Listings" asp-action="Create">
+                        <i class="bi bi-plus-circle text-success"></i>Зар нэмэх
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item rounded-3 d-flex align-items-center gap-2"
+                           asp-controller="Chat" asp-action="Index">
+                        <i class="bi bi-chat text-success"></i>
+                        Чат
+                        <span class="badge bg-danger rounded-pill ms-auto d-none"
+                              id="chatBadgeMenu" style="font-size:9px">0</span>
+                    </a>
+                </li>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><hr class="dropdown-divider my-1" /></li>
+                    <li>
+                        <a class="dropdown-item rounded-3 d-flex align-items-center gap-2"
+                               asp-controller="Admin" asp-action="Dashboard">
+                            <i class="bi bi-shield-check" style="color:#7c3aed"></i>
+                            Админ панел
+                        </a>
+                    </li>
+                }
+
+                <li><hr class="dropdown-divider my-1" /></li>
+                <li>
+                    <form asp-controller="Account" asp-action="Logout"
+                          method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="dropdown-item rounded-3 d-flex align-items-center gap-2 text-danger">
+                            <i class="bi bi-box-arrow-right"></i>Гарах
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Add listing CTA — desktop only -->
+        <a asp-controller="Listings" asp-action="Create"
+               class="btn btn-success rounded-pill px-3 fw-600 d-none d-lg-flex align-items-center gap-1"
+               style="height:38px;font-size:.85rem">
+            <i class="bi bi-plus-lg"></i>
+            <span>Зар нэмэх</span>
+        </a>
+    </div>
+}
+else
+{
+    <div class="d-flex align-items-center gap-2">
+        <a asp-controller="Account" asp-action="Login"
+               class="btn btn-outline-success rounded-pill fw-600"
+               style="height:38px;font-size:.875rem;padding:0 18px">
+            Нэвтрэх
+        </a>
+        <a asp-controller="Account" asp-action="Register"
+               class="btn btn-success rounded-pill fw-600"
+               style="height:38px;font-size:.875rem;padding:0 18px">
+            Бүртгүүлэх
+        </a>
+    </div>
+}

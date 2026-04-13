@@ -1,0 +1,138 @@
+﻿@model LoginViewModel
+@{
+    ViewData["Title"] = "Нэвтрэх";
+    Layout = "_Layout";
+}
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
+     style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+    <div class="w-100" style="max-width: 440px; padding: 0 16px;">
+
+        <!-- Logo -->
+        <div class="text-center mb-4">
+            <a asp-controller="Home" asp-action="Index"
+                   class="text-decoration-none d-inline-flex align-items-center gap-2">
+                <i class="bi bi-house-heart-fill text-success" style="font-size:2rem"></i>
+                <span class="fw-800 text-success" style="font-size:1.5rem;letter-spacing:-0.5px">BairlyMN</span>
+            </a>
+            <p class="text-muted small mt-1 mb-0">Үл хөдлөх хөрөнгийн зах зээл</p>
+        </div>
+
+        <div class="card border-0 shadow-xl rounded-4 overflow-hidden">
+            <!-- Header -->
+            <div class="p-4 text-center"
+                 style="background:linear-gradient(135deg,#166534,#16a34a)">
+                <h4 class="fw-700 text-white mb-0">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Нэвтрэх
+                </h4>
+            </div>
+
+            <div class="card-body p-4">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger rounded-3 small d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                        <div>
+                            @foreach (var error in ViewData.ModelState.Values
+                                                                      .SelectMany(v => v.Errors))
+                            {
+                                <div>@error.ErrorMessage</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <form asp-action="Login" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-600">
+                            <i class="bi bi-envelope me-1 text-success"></i>И-мэйл хаяг
+                        </label>
+                        <input asp-for="Email"
+                               class="form-control rounded-3"
+                               placeholder="you@example.com"
+                               autocomplete="username"
+                               autofocus />
+                        <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Password" class="form-label fw-600 mb-0">
+                                <i class="bi bi-lock me-1 text-success"></i>Нууц үг
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control rounded-start-3"
+                                   placeholder="••••••••"
+                                   autocomplete="current-password"
+                                   id="passwordInput" />
+                            <button class="btn btn-light border rounded-end-3"
+                                    type="button"
+                                    onclick="togglePassword()">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input asp-for="RememberMe"
+                                   class="form-check-input"
+                                   id="rememberMe" />
+                            <label class="form-check-label small" for="rememberMe">
+                                Намайг сана
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="btn btn-success w-100 py-2 fw-600 rounded-3 mb-3">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Нэвтрэх
+                    </button>
+
+                    <p class="text-center text-muted small mb-0">
+                        Данс байхгүй юу?
+                        <a asp-controller="Account" asp-action="Register"
+                               class="text-success fw-600 text-decoration-none">
+                            Бүртгүүлэх
+                        </a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+            <a asp-controller="Home" asp-action="Index"
+                   class="text-muted text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>Нүүр хуудас руу буцах
+            </a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+}

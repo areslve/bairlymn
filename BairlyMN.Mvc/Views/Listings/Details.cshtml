@@ -1,0 +1,702 @@
+﻿@model ListingDetailViewModel
+@{
+    var l = Model.Listing;
+    ViewData["Title"] = l.Title;
+
+    var typeLabel = l.PropertyType switch
+    {
+        PropertyType.Apartment => "Орон сууц",
+        PropertyType.House => "Байшин",
+        PropertyType.Land => "Газар",
+        PropertyType.Office => "Оффис",
+        PropertyType.Warehouse => "Агуулах",
+        _ => "Бусад"
+    };
+    var isSale = l.TransactionType == TransactionType.Sale;
+
+    ViewData["OgImage"] = l.Images?.FirstOrDefault()?.ImagePath ?? "/img/hero-default.svg";
+    ViewData["Description"] = l.Description.Length > 160
+                              ? l.Description[..157] + "..."
+                              : l.Description;
+}
+
+<div class="bg-light py-2 py-md-3 border-bottom">
+    <div class="container">
+        <nav>
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-success">Нүүр</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="Listings" asp-action="Index" class="text-success">Зарууд</a>
+                </li>
+                <li class="breadcrumb-item active text-truncate" style="max-width:150px">
+                    @l.Title
+                </li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-3 py-md-4">
+    <div class="row g-3 g-md-4">
+
+        <!-- ── LEFT COLUMN ──────────────────────────────────────── -->
+        <div class="col-12 col-lg-8">
+
+            <!-- ══ GALLERY ════════════════════════════════════════ -->
+            @if (l.Images?.Any() == true)
+            {
+                var images = l.Images.OrderBy(i => i.SortOrder).ToList();
+
+                <!-- Main image — tappable -->
+                <div class="gallery-main-wrap rounded-3 overflow-hidden shadow-sm mb-2 position-relative"
+                     style="background:#0f172a">
+                    <img id="mainGalleryImg"
+                         src="@images[0].ImagePath"
+                         class="w-100 gallery-main-img"
+                         alt="@l.Title"
+                         onerror="this.src='/img/no-image.svg'"
+                         data-index="0"
+                         onclick="openLightbox(0)"
+                         style="cursor:zoom-in" />
+
+                    <!-- Image counter -->
+                    <div class="position-absolute bottom-0 end-0 m-2">
+                        <span class="badge rounded-pill fw-500"
+                              style="background:rgba(0,0,0,.55);
+                            color:white;font-size:.72rem;
+                            backdrop-filter:blur(4px)">
+                            <i class="bi bi-images me-1"></i>
+                            <span id="imgCounter">1</span>/@images.Count
+                        </span>
+                    </div>
+
+                    <!-- Tap hint (mobile only) -->
+                    <div class="position-absolute top-0 start-0 m-2 d-md-none">
+                        <span class="badge rounded-pill"
+                              style="background:rgba(0,0,0,.45);color:white;
+                            font-size:.68rem;backdrop-filter:blur(4px)">
+                            <i class="bi bi-zoom-in me-1"></i>Томруулах
+                        </span>
+                    </div>
+
+                    @if (images.Count > 1)
+                    {
+                        <!-- Prev/Next arrows -->
+                        <button class="gallery-arrow gallery-arrow-prev"
+                                onclick="changeImage(-1)" type="button" aria-label="Өмнөх">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="gallery-arrow gallery-arrow-next"
+                                onclick="changeImage(1)" type="button" aria-label="Дараах">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    }
+                </div>
+
+                <!-- Thumbnails -->
+                
+
+                <!-- Lightbox Modal -->
+                <div class="modal fade" id="lightboxModal" tabindex="-1"
+                     aria-label="Зургийн үзэгч">
+                    <div class="modal-dialog modal-dialog-centered modal-xl modal-fullscreen-md-down">
+                        <div class="modal-content border-0 rounded-3 overflow-hidden"
+                             style="background:#0a0a0a">
+                            <!-- Header -->
+                            <div class="modal-header border-0 py-2 px-3"
+                                 style="background:rgba(0,0,0,.6)">
+                                <span class="text-white small fw-500">
+                                    <span id="lbCounter">1</span>/@images.Count
+                                    &nbsp;·&nbsp;
+                                    <span class="opacity-75 text-truncate"
+                                          style="max-width:200px;display:inline-block;
+                                    vertical-align:middle">@l.Title</span>
+                                </span>
+                                <button type="button" class="btn-close btn-close-white"
+                                        data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <!-- Image -->
+                            <div class="modal-body p-0 d-flex align-items-center
+                                justify-content-center position-relative"
+                                 style="min-height:60vh;background:#0a0a0a">
+                                <button class="lb-arrow lb-arrow-prev"
+                                        onclick="lbChange(-1)" type="button">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+
+                                <img id="lightboxImg"
+                                     src="@images[0].ImagePath"
+                                     class="lb-main-img"
+                                     alt="@l.Title"
+                                     onerror="this.src='/img/no-image.svg'" />
+
+                                <button class="lb-arrow lb-arrow-next"
+                                        onclick="lbChange(1)" type="button">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <!-- Thumbnails inside modal -->
+                            @if (images.Count > 1)
+                            {
+                                <div class="d-flex gap-2 justify-content-center p-2 flex-wrap"
+                                     style="background:rgba(0,0,0,.6)">
+                                    @for (int i = 0; i < images.Count; i++)
+                                    {
+                                        <img src="@images[i].ImagePath"
+                                             class="lb-thumb @(i == 0 ? "active" : "")"
+                                             data-index="@i"
+                                             onclick="lbSet(@i)"
+                                             onerror="this.src='/img/no-image.svg'"
+                                             alt="Зураг @(i + 1)"
+                                             style="cursor:pointer" />
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store images as JS data -->
+                <script>
+                                const GALLERY_IMAGES = @Html.Raw(
+                                                        System.Text.Json.JsonSerializer.Serialize(
+                                                                images.Select(img => img.ImagePath)));
+                </script>
+            }
+            else
+            {
+                <div class="bg-light rounded-3 d-flex align-items-center
+                    justify-content-center mb-3 shadow-sm"
+                     style="height:220px">
+                    <div class="text-muted text-center">
+                        <i class="bi bi-image fs-1 d-block mb-2 opacity-40"></i>
+                        <span class="small">Зураг байхгүй</span>
+                    </div>
+                </div>
+            }
+
+            <!-- ══ TITLE & PRICE CARD ══════════════════════════════ -->
+            <div class="card border-0 shadow-sm rounded-3 p-3 p-md-4 mb-3">
+                <!-- Badges -->
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge rounded-pill fw-600"
+                          style="@(isSale
+                                                                              ? "background:#16a34a;color:white"
+                                                                              : "background:#2563eb;color:white")">
+                        @(isSale ? "Худалдах" : "Түрээслэх")
+                    </span>
+                    <span class="badge rounded-pill fw-500"
+                          style="background:#f0fdf4;color:#166534">
+                        @typeLabel
+                    </span>
+                    @if (l.IsPromoted)
+                    {
+                        <span class="badge rounded-pill"
+                              style="background:#f59e0b;color:white">
+                            <i class="bi bi-star-fill me-1"></i>Онцлох
+                        </span>
+                    }
+                    <span class="badge rounded-pill ms-auto"
+                          style="background:#f1f5f9;color:#64748b">
+                        <i class="bi bi-eye me-1"></i>@l.ViewCount
+                    </span>
+                </div>
+
+                <!-- Title -->
+                <h1 class="fw-800 mb-2 lh-sm" style="font-size:clamp(1.1rem,4vw,1.5rem)">
+                    @l.Title
+                </h1>
+
+                <!-- Location -->
+                @if (!string.IsNullOrEmpty(l.Address) || l.LocationNode != null)
+                {
+                    <p class="text-muted mb-2 small">
+                        <i class="bi bi-geo-alt text-success me-1"></i>
+                        @l.Address
+                        @if (l.LocationNode != null)
+                        {
+                            <span class="ms-1">· @l.LocationNode.Name</span>
+                        }
+                    </p>
+                }
+
+                <!-- Price -->
+                <div class="d-flex align-items-end gap-2 flex-wrap">
+                    <div class="fw-900 text-success"
+                         style="font-size:clamp(1.4rem,5vw,2rem);letter-spacing:-.5px">
+                        @l.Price.ToString("N0") ₮
+                    </div>
+                    @if (!isSale)
+                    {
+                        <small class="text-muted mb-1">/сар</small>
+                    }
+                    @if (l.Area.HasValue && l.Price > 0 && isSale)
+                    {
+                        <div class="text-muted small mb-1">
+                            · @((l.Price / l.Area.Value).ToString("N0")) ₮/м²
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ══ MOBILE: Owner + Action (only on mobile) ════════ -->
+            <div class="d-lg-none mb-3">
+                @await Html.PartialAsync("_ListingDetailSidebar", Model)
+            </div>
+
+            <!-- ══ QUICK SPECS ══════════════════════════════════════ -->
+            @{
+                var aptD = l.ApartmentDetails;
+                var houseD = l.HouseDetails;
+                var rooms = aptD?.Rooms ?? houseD?.Rooms;
+                var floor = aptD?.Floor;
+                var totalF = aptD?.TotalFloors;
+            }
+            @if (rooms.HasValue || l.Area.HasValue || floor.HasValue)
+            {
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+                    <div class="row g-2 text-center">
+                        @if (l.Area.HasValue)
+                        {
+                            <div class="col-4 col-md-3">
+                                <div class="fw-700 text-success">@l.Area м²</div>
+                                <div class="text-muted" style="font-size:.72rem">Талбай</div>
+                            </div>
+                        }
+                        @if (rooms.HasValue)
+                        {
+                            <div class="col-4 col-md-3">
+                                <div class="fw-700 text-success">@rooms</div>
+                                <div class="text-muted" style="font-size:.72rem">Өрөө</div>
+                            </div>
+                        }
+                        @if (floor.HasValue)
+                        {
+                            <div class="col-4 col-md-3">
+                                <div class="fw-700 text-success">
+                                    @floor@(totalF.HasValue ? $"/{totalF}" : "")
+                                </div>
+                                <div class="text-muted" style="font-size:.72rem">Давхар</div>
+                            </div>
+                        }
+                        @if (aptD?.Bathrooms.HasValue == true)
+                        {
+                            <div class="col-4 col-md-3">
+                                <div class="fw-700 text-success">@aptD.Bathrooms</div>
+                                <div class="text-muted" style="font-size:.72rem">Угаалгын өрөо</div>
+                            </div>
+                        }
+                        @if (aptD?.BuildYear.HasValue == true || houseD?.BuildYear.HasValue == true)
+                        {
+                            <div class="col-4 col-md-3">
+                                <div class="fw-700 text-success">
+                                    @(aptD?.BuildYear ?? houseD?.BuildYear)
+                                </div>
+                                <div class="text-muted" style="font-size:.72rem">Баригдсан он</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+           
+            <!-- ══ APARTMENT DETAILS ═══════════════════════════════ -->
+            @if (aptD != null)
+            {
+                <div class="card border-0 shadow-sm rounded-3 p-3 p-md-4 mb-3">
+                    <h5 class="fw-700 mb-3" style="font-size:1rem">
+                        <i class="bi bi-building me-2 text-success"></i>Орон сууцны дэлгэрэнгүй
+                    </h5>
+
+                    <div class="row g-2 mb-3">
+                        @DetailItem("bi-layers", "Давхар", aptD.Floor?.ToString())
+                        @DetailItem("bi-building-up", "Нийт давхар", aptD.TotalFloors?.ToString())
+                        @DetailItem("bi-door-open", "Өрөо", aptD.Rooms?.ToString())
+                        @DetailItem("bi-droplet", "Угаалгын өрөo", aptD.Bathrooms?.ToString())
+                        @DetailItem("bi-calendar3", "Баригдсан он", aptD.BuildYear?.ToString())
+                        @DetailItem("bi-house-gear", "Нөхцөл", aptD.Condition)
+                        @DetailItem("bi-bricks", "Барилгын материал", aptD.BuildingType)
+                        @DetailItem("bi-thermometer-half", "Халаалт", aptD.HeatingType)
+                        @DetailItem("bi-grid-1x2", "Цонх", aptD.WindowType)
+                        @DetailItem("bi-square", "Шал", aptD.FloorMaterial)
+                        @DetailItem("bi-door-closed", "Хаалга", aptD.DoorsCount?.ToString())
+                        @DetailItem("bi-rulers", "Амьдрах талбай", aptD.LivingArea.HasValue ? $"{aptD.LivingArea} м²" : null)
+                        @DetailItem("bi-fire", "Гал тогоо", aptD.KitchenArea.HasValue ? $"{aptD.KitchenArea} м²" : null)
+                        @DetailItem("bi-grid-3x2-gap", "Тагт", aptD.BalconyArea.HasValue ? $"{aptD.BalconyArea} м²" : null)
+                    </div>
+
+                    @{
+                        var features = new List<(string icon, string label, bool has)>
+                        {
+                            ("bi-grid-3x2-gap", "Тагт",         aptD.HasBalcony),
+                            ("bi-p-circle",     "Зогсоол",      aptD.HasParking),
+                            ("bi-arrow-up-square","Лифт",       aptD.HasElevator),
+                            ("bi-box",          "Агуулах",      aptD.HasStorage),
+                            ("bi-shield-check", "Харуул",       aptD.HasSecurity),
+                            ("bi-lamp",         "Тавилгатай",   aptD.IsFurnished),
+                            ("bi-wind",         "Агааржуулагч", aptD.HasAircon)
+                        };
+                    }
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var (icon, label, has) in features)
+                        {
+                            @FeaturePill(icon, label, has)
+                        }
+                    </div>
+
+                    @if (aptD.IsSharedApartment)
+                    {
+                        <div class="alert rounded-3 mt-3 d-flex align-items-center gap-2 mb-0"
+                             style="background:#eff6ff;border:1px solid #bfdbfe">
+                            <i class="bi bi-people-fill text-primary fs-5 flex-shrink-0"></i>
+                            <div>
+                                <div class="fw-700 text-primary small">Хуваалцсан орон сууц</div>
+                                @if (aptD.AvailableRooms.HasValue)
+                                {
+                                    <div class="text-muted" style="font-size:.78rem">
+                                        @aptD.AvailableRooms нээлттэй өрөотэй
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (!isSale && (aptD.AllowsPets.HasValue || aptD.AllowsSmoking.HasValue || aptD.MinRentMonths.HasValue))
+                    {
+                        <div class="mt-3 pt-3 border-top">
+                            <div class="fw-600 small text-muted text-uppercase mb-2">
+                                Түрээсийн нөхцөл
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @if (aptD.MinRentMonths.HasValue)
+                                {
+                                    <span class="badge rounded-pill fw-500"
+                                          style="background:#f0fdf4;color:#166534;font-size:.78rem">
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        Хамгийн багадаа @aptD.MinRentMonths сар
+                                    </span>
+                                }
+                                @if (aptD.AllowsPets.HasValue)
+                                {
+                                    @FeaturePill("bi-heart", "Тэжээвэр амьтан", aptD.AllowsPets.Value)
+                                }
+                                @if (aptD.AllowsSmoking.HasValue)
+                                {
+                                    @FeaturePill("bi-slash-circle", "Тамхи татах", aptD.AllowsSmoking.Value)
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- ══ HOUSE DETAILS ═══════════════════════════════════ -->
+            @if (houseD != null)
+            {
+                <div class="card border-0 shadow-sm rounded-3 p-3 p-md-4 mb-3">
+                    <h5 class="fw-700 mb-3" style="font-size:1rem">
+                        <i class="bi bi-house-door me-2 text-success"></i>Байшингийн дэлгэрэнгүй
+                    </h5>
+                    <div class="row g-2 mb-3">
+                        @DetailItem("bi-door-open", "Өрөо", houseD.Rooms?.ToString())
+                        @DetailItem("bi-droplet", "Угаалгын өрөo", houseD.Bathrooms?.ToString())
+                        @DetailItem("bi-layers", "Давхар", houseD.Floors?.ToString())
+                        @DetailItem("bi-map", "Газрын талбай", houseD.LandArea.HasValue ? $"{houseD.LandArea} м²" : null)
+                        @DetailItem("bi-calendar3", "Баригдсан он", houseD.BuildYear?.ToString())
+                        @DetailItem("bi-house-gear", "Нөхцөл", houseD.Condition)
+                        @DetailItem("bi-bricks", "Барилгын материал", houseD.BuildingType)
+                        @DetailItem("bi-house", "Дээврийн төрөл", houseD.RoofType)
+                        @DetailItem("bi-thermometer-half", "Халаалт", houseD.HeatingType)
+                        @DetailItem("bi-square", "Шал", houseD.FloorMaterial)
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @FeaturePill("bi-car-front", "Гараж", houseD.HasGarage)
+                        @FeaturePill("bi-flower1", "Цэцэрлэг", houseD.HasGarden)
+                        @FeaturePill("bi-shield", "Хашаа", houseD.HasFence)
+                        @FeaturePill("bi-box", "Подвал", houseD.HasBasement)
+                        @FeaturePill("bi-droplet-half", "Сауна", houseD.HasSauna)
+                        @FeaturePill("bi-lamp", "Тавилгатай", houseD.IsFurnished)
+                        @FeaturePill("bi-wind", "Агааржуулагч", houseD.HasAircon)
+                    </div>
+                </div>
+            }
+
+            <!-- ══ LAND DETAILS ════════════════════════════════════ -->
+            @if (l.LandDetails != null)
+            {
+                var ld = l.LandDetails;
+                <div class="card border-0 shadow-sm rounded-3 p-3 p-md-4 mb-3">
+                    <h5 class="fw-700 mb-3" style="font-size:1rem">
+                        <i class="bi bi-map me-2 text-success"></i>Газрын дэлгэрэнгүй
+                    </h5>
+                    <div class="row g-2 mb-3">
+                        @DetailItem("bi-signpost", "Бүсчлэл", ld.ZoningType)
+                        @DetailItem("bi-hash", "Кадастр №", ld.CadastralNumber)
+                        @DetailItem("bi-geo", "Зориулалт", ld.LandUsePurpose)
+                        @DetailItem("bi-file-text", "Эрхийн төрөл", ld.LandOwnershipType)
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @FeaturePill("bi-sign-turn-right", "Замтай", ld.HasRoadAccess)
+                        @FeaturePill("bi-lightning", "Цахилгаан", ld.HasElectricity)
+                        @FeaturePill("bi-droplet", "Ус", ld.HasWater)
+                        @FeaturePill("bi-pipe", "Бохир ус", ld.HasSewer)
+                        @FeaturePill("bi-fire", "Хий", ld.HasGas)
+                        @FeaturePill("bi-shield", "Хашаа", ld.HasFence)
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- ── RIGHT SIDEBAR (desktop only) ────────────────────── -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="sticky-top" style="top:80px">
+                @await Html.PartialAsync("_ListingDetailSidebar", Model)
+            </div>
+        </div>
+
+    </div>
+
+    
+    <!-- ══ DESCRIPTION ════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm rounded-3 p-3 p-md-4 mb-3">
+        <h5 class="fw-700 mb-3" style="font-size:1rem">
+            <i class="bi bi-text-paragraph me-2 text-success"></i>Тайлбар
+        </h5>
+        <div class="text-secondary lh-lg" style="font-size:.9rem;white-space:pre-wrap">
+            @l.Description
+        </div>
+    </div>
+
+    <!-- Related listings -->
+    @{
+        var related = ViewBag.RelatedListings as List<BairlyMN.Data.Entities.Listing>;
+    }
+    @if (related?.Any() == true)
+    {
+        <div class="mt-4 pt-3 border-top">
+            <h5 class="fw-700 mb-3">
+                <i class="bi bi-grid me-2 text-success"></i>Ижил төстэй зарууд
+            </h5>
+            <div class="row g-3">
+                @foreach (var r in related)
+                {
+                    <div class="col-6 col-md-4">
+                        @await Html.PartialAsync("_ListingCard", r)
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-xl">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-700">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Зар устгах
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Та энэ зарыг бүрмөсөн устгахдаа итгэлтэй байна уу?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light rounded-pill" data-bs-dismiss="modal">Болих</button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger rounded-pill fw-600 px-4">
+                        <i class="bi bi-trash me-2"></i>Устгах
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        /* ── Gallery ──────────────────────────────────────────────────── */
+        let currentIndex = 0;
+        const images = typeof GALLERY_IMAGES !== 'undefined' ? GALLERY_IMAGES : [];
+
+        function setImage(index) {
+            if (!images.length) return;
+            currentIndex = ((index % images.length) + images.length) % images.length;
+
+            const mainImg = document.getElementById('mainGalleryImg');
+            const counter = document.getElementById('imgCounter');
+
+            if (mainImg) {
+                mainImg.style.opacity = '0';
+                setTimeout(() => {
+                    mainImg.src        = images[currentIndex];
+                    mainImg.dataset.index = currentIndex;
+                    mainImg.style.opacity = '1';
+                }, 120);
+            }
+            if (counter) counter.textContent = currentIndex + 1;
+
+            // Thumbnail active state
+            document.querySelectorAll('.gallery-thumb').forEach((t, i) =>
+                t.classList.toggle('active', i === currentIndex));
+        }
+
+        function changeImage(dir) {
+            setImage(currentIndex + dir);
+        }
+
+        /* ── Lightbox ──────────────────────────────────────────────────── */
+        let lbModal = null;
+        let lbIndex = 0;
+
+        function openLightbox(index) {
+            lbIndex = index;
+            updateLightbox();
+            if (!lbModal) {
+                lbModal = new bootstrap.Modal(document.getElementById('lightboxModal'), {
+                    keyboard: true
+                });
+            }
+            lbModal.show();
+        }
+
+        function updateLightbox() {
+            const img     = document.getElementById('lightboxImg');
+            const counter = document.getElementById('lbCounter');
+            if (img) {
+                img.style.opacity = '0';
+                setTimeout(() => {
+                    img.src = images[lbIndex];
+                    img.style.opacity = '1';
+                }, 100);
+            }
+            if (counter) counter.textContent = lbIndex + 1;
+
+            // Lightbox thumbnails
+            document.querySelectorAll('.lb-thumb').forEach((t, i) =>
+                t.classList.toggle('active', i === lbIndex));
+        }
+
+        function lbChange(dir) {
+            lbIndex = ((lbIndex + dir) % images.length + images.length) % images.length;
+            updateLightbox();
+        }
+
+        function lbSet(index) {
+            lbIndex = index;
+            updateLightbox();
+        }
+
+        /* ── Keyboard navigation ───────────────────────────────────────── */
+        document.addEventListener('keydown', e => {
+            const lbEl = document.getElementById('lightboxModal');
+            if (lbEl && lbEl.classList.contains('show')) {
+                if (e.key === 'ArrowLeft')  lbChange(-1);
+                if (e.key === 'ArrowRight') lbChange(1);
+            } else {
+                if (e.key === 'ArrowLeft')  changeImage(-1);
+                if (e.key === 'ArrowRight') changeImage(1);
+            }
+        });
+
+        /* ── Swipe support (mobile) ────────────────────────────────────── */
+        (function() {
+            let startX = 0;
+            const mainWrap = document.querySelector('.gallery-main-wrap');
+            const lbBody   = document.querySelector('#lightboxModal .modal-body');
+
+            function addSwipe(el, onLeft, onRight) {
+                if (!el) return;
+                el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+                el.addEventListener('touchend', e => {
+                    const diff = startX - e.changedTouches[0].clientX;
+                    if (Math.abs(diff) > 40) diff > 0 ? onLeft() : onRight();
+                }, { passive: true });
+            }
+
+            addSwipe(mainWrap, () => changeImage(1),  () => changeImage(-1));
+            addSwipe(lbBody,   () => lbChange(1),     () => lbChange(-1));
+        })();
+
+        /* ── Delete & Favorite ────────────────────────────────────────── */
+        function confirmDelete(id) {
+            document.getElementById('deleteForm').action = '/Listings/Delete/' + id;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        async function toggleFav(id) {
+            const btn   = document.getElementById('favBtn');
+            const token = document.querySelector('[name=__RequestVerificationToken]')?.value || '';
+            if (btn) btn.disabled = true;
+            try {
+                const r = await fetch('/Listings/ToggleFavorite/' + id, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                });
+                const d = await r.json();
+                if (btn) {
+                    if (d.added) {
+                        btn.className = btn.className.replace('btn-outline-warning','btn-warning');
+                        btn.innerHTML = '<i class="bi bi-bookmark-fill me-2"></i>Хадгалагдсан';
+                    } else {
+                        btn.className = btn.className.replace('btn-warning','btn-outline-warning');
+                        btn.innerHTML = '<i class="bi bi-bookmark me-2"></i>Хадгалах';
+                    }
+                }
+                if (typeof showToast === 'function') showToast(d.message, d.added ? 'success' : 'info');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href)
+                .then(() => { if (typeof showToast==='function') showToast('Холбоос хуулагдлаа!','success'); });
+        }
+    </script>
+}
+
+@* ─── Helper functions ───────────────────────────────────────────── *@
+@functions {
+    IHtmlContent DetailItem(string icon, string label, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return HtmlString.Empty;
+        return new HtmlString($@"
+        <div class='col-6 col-sm-4'>
+            <div class='d-flex align-items-start gap-2 bg-light rounded-3 p-2 h-100'>
+                <i class='bi {icon} text-success flex-shrink-0 mt-1' style='font-size:.9rem'></i>
+                <div>
+                    <div class='text-muted' style='font-size:.68rem;text-transform:uppercase;
+                                                   font-weight:700;letter-spacing:.05em'>
+                        {System.Web.HttpUtility.HtmlEncode(label)}
+                    </div>
+                    <div class='fw-600' style='font-size:.82rem'>
+                        {System.Web.HttpUtility.HtmlEncode(value)}
+                    </div>
+                </div>
+            </div>
+        </div>");
+    }
+
+    IHtmlContent FeaturePill(string icon, string label, bool has)
+    {
+        if (has)
+            return new HtmlString($@"
+            <span class='badge rounded-pill fw-500'
+                  style='background:#dcfce7;color:#166534;font-size:.78rem'>
+                <i class='bi {icon} me-1'></i>{System.Web.HttpUtility.HtmlEncode(label)}
+            </span>");
+        return new HtmlString($@"
+            <span class='badge rounded-pill fw-500'
+                  style='background:#f1f5f9;color:#94a3b8;font-size:.78rem;
+                         text-decoration:line-through'>
+                {System.Web.HttpUtility.HtmlEncode(label)}
+            </span>");
+    }
+}

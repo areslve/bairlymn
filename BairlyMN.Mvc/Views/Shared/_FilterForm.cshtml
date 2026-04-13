@@ -1,0 +1,212 @@
+﻿@model BairlyMN.Mvc.ViewModels.FilterFormModel
+@{
+    var f      = Model.Filter;
+    var prefix = Model.IdPrefix;
+    var tx     = f.TransactionType;
+    var pt     = f.PropertyType;
+}
+
+<form asp-controller="Listings" asp-action="Index"
+      method="get" id="@(prefix)_form">
+    <input type="hidden" name="Page" value="1" />
+
+    <!-- ── Хайлт ───────────────────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Хайлт</label>
+        <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light border-end-0">
+                <i class="bi bi-search text-muted" style="font-size:.8rem"></i>
+            </span>
+            <input type="text" name="Search" value="@f.Search"
+                   class="form-control form-control-sm border-start-0"
+                   placeholder="Гарчиг, байршил..." />
+        </div>
+    </div>
+
+    <!-- ── Гүйлгээний төрөл ────────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Гүйлгээний төрөл</label>
+        <div class="d-flex gap-1">
+            <input type="radio" class="btn-check" name="TransactionType"
+                   id="@(prefix)_txAll" value=""
+                   @(tx == null ? "checked" : "") />
+            <label class="btn btn-sm btn-outline-secondary rounded-pill flex-fill"
+                   for="@(prefix)_txAll" style="font-size:.78rem">Бүгд</label>
+
+            <input type="radio" class="btn-check" name="TransactionType"
+                   id="@(prefix)_txSale" value="1"
+                   @(tx == BairlyMN.Domain.Enums.TransactionType.Sale ? "checked":"") />
+            <label class="btn btn-sm btn-outline-success rounded-pill flex-fill"
+                   for="@(prefix)_txSale" style="font-size:.78rem">Худалдах</label>
+
+            <input type="radio" class="btn-check" name="TransactionType"
+                   id="@(prefix)_txRent" value="2"
+                   @(tx == BairlyMN.Domain.Enums.TransactionType.Rent ? "checked":"") />
+            <label class="btn btn-sm btn-outline-primary rounded-pill flex-fill"
+                   for="@(prefix)_txRent" style="font-size:.78rem">Түрээс</label>
+        </div>
+    </div>
+
+    <!-- ── Үл хөдлөхийн төрөл ─────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Үл хөдлөхийн төрөл</label>
+        <div class="d-flex flex-column" style="gap:3px">
+            @{
+                var ptItems = new (string Val, string Icon, string Label)[]
+                {
+                    ("",  "bi-grid",       "Бүгд"),
+                    ("1", "bi-building",   "Орон сууц"),
+                    ("2", "bi-house-door", "Байшин"),
+                    ("3", "bi-map",        "Газар"),
+                    ("4", "bi-briefcase",  "Оффис"),
+                    ("5", "bi-box-seam",   "Агуулах"),
+                };
+            }
+            @foreach (var item in ptItems)
+            {
+                bool isChecked = item.Val == ""
+                    ? pt == null
+                    : pt?.ToString() == PtName(item.Val);
+
+                <div class="filter-check @(isChecked ? "active" : "")">
+                    <input class="form-check-input" type="radio"
+                           name="PropertyType"
+                           id="@(prefix)_pt@(item.Val)"
+                           value="@item.Val"
+                           @(isChecked ? "checked" : "") />
+                    <label class="form-check-label w-100 d-flex align-items-center gap-2"
+                           for="@(prefix)_pt@(item.Val)">
+                        <i class="bi @item.Icon text-success"
+                           style="font-size:.85rem;width:16px"></i>
+                        <span style="font-size:.85rem">@item.Label</span>
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ── Байршил — 3 түвшин ──────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Байршил</label>
+        <div class="d-flex flex-column gap-2">
+            <select class="form-select form-select-sm rounded-3"
+                    id="@(prefix)_l1"
+                    onchange="l1Change('@prefix')"
+                    disabled>
+                <option value="">— Хот / Аймаг —</option>
+            </select>
+
+            <select class="form-select form-select-sm rounded-3"
+                    id="@(prefix)_l2"
+                    onchange="l2Change('@prefix')"
+                    disabled>
+                <option value="">— Дүүрэг / Сум —</option>
+            </select>
+
+            <select class="form-select form-select-sm rounded-3"
+                    id="@(prefix)_l3"
+                    onchange="l3Change('@prefix')"
+                    disabled>
+                <option value="">— Хороо / Баг —</option>
+            </select>
+
+            <input type="hidden"
+                   name="LocationNodeId"
+                   id="@(prefix)_locId"
+                   value="@f.LocationNodeId" />
+        </div>
+    </div>
+
+    <!-- ── Ангилал ─────────────────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Ангилал</label>
+        <select name="CategoryId"
+                class="form-select form-select-sm rounded-3">
+            <option value="">Бүгд</option>
+            @foreach (var c in Model.Categories)
+            {
+               <option value="@c.Value"
+                                            selected="@(Model.Filter.CategoryId?.ToString() == c.Value ? "selected" : null)">
+                                        @c.Text
+                                    </option>
+            }
+        </select>
+    </div>
+
+    <!-- ── Үнийн хязгаар ───────────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Үнийн хязгаар (₮)</label>
+        <div class="row g-2">
+            <div class="col-6">
+                <input type="number" name="MinPrice" value="@f.MinPrice"
+                       class="form-control form-control-sm rounded-3"
+                       placeholder="Доод" min="0" />
+            </div>
+            <div class="col-6">
+                <input type="number" name="MaxPrice" value="@f.MaxPrice"
+                       class="form-control form-control-sm rounded-3"
+                       placeholder="Дээд" min="0" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Талбай ──────────────────────────────────────────────── -->
+    <div class="mb-3">
+        <label class="filter-label">Талбай (м²)</label>
+        <div class="row g-2">
+            <div class="col-6">
+                <input type="number" name="MinArea" value="@f.MinArea"
+                       class="form-control form-control-sm rounded-3"
+                       placeholder="Доод" min="0" />
+            </div>
+            <div class="col-6">
+                <input type="number" name="MaxArea" value="@f.MaxArea"
+                       class="form-control form-control-sm rounded-3"
+                       placeholder="Дээд" min="0" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Өрөөний тоо ─────────────────────────────────────────── -->
+    <div class="mb-4">
+        <label class="filter-label">Өрөөний тоо</label>
+        <div class="d-flex gap-1 flex-wrap rooms-wrap">
+            @foreach (var r in new[]{"1","2","3","4","5+"})
+            {
+                var rv     = r == "5+" ? "5" : r;
+                var active = f.MinRooms?.ToString() == rv;
+                <button type="button"
+                        class="btn btn-sm rounded-pill room-btn @(active ? "btn-success" : "btn-light")"
+                        data-val="@rv"
+                        onclick="setRoom('@prefix', this, '@rv')"
+                        style="font-size:.78rem;min-width:36px">
+                    @r
+                </button>
+            }
+        </div>
+        <input type="hidden" name="MinRooms"
+               id="@(prefix)_rooms"
+               value="@f.MinRooms" />
+    </div>
+
+    <!-- ── Хайх товч ───────────────────────────────────────────── -->
+    <div class="d-flex gap-2">
+        <button type="submit"
+                class="btn btn-success flex-fill rounded-pill fw-700"
+                @(prefix == "mob" ? "data-bs-dismiss='offcanvas'" : "")>
+            <i class="bi bi-search me-1"></i>Хайх
+        </button>
+        <a asp-controller="Listings" asp-action="Index"
+           class="btn btn-light rounded-pill"
+           title="Цэвэрлэх">
+            <i class="bi bi-x"></i>
+        </a>
+    </div>
+</form>
+
+@functions {
+    string PtName(string v) => v switch {
+        "1"=>"Apartment","2"=>"House","3"=>"Land",
+        "4"=>"Office","5"=>"Warehouse",_=>""
+    };
+}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /Admin/
+Disallow: /Profile/Edit
+Disallow: /Account/
+
+Sitemap: https://www.bairly.mn/sitemap.xml

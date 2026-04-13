@@ -1,0 +1,230 @@
+﻿/* ════════════════════════════════════════════════════════════════
+   BairlyMN — Details Page Mobile Styles
+   Desktop/tablet-г хөндөхгүй — зөвхөн mobile fix
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Gallery main image ─────────────────────────────────────────── */
+.gallery-main-img {
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    transition: opacity .15s ease;
+}
+
+@media (max-width: 575.98px) {
+    .gallery-main-img {
+        height: 260px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .gallery-main-img {
+        height: 310px;
+    }
+}
+
+@media (min-width: 768px) {
+    .gallery-main-img {
+        height: 420px;
+    }
+}
+
+/* ── Gallery arrows ─────────────────────────────────────────────── */
+.gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.45);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background .15s;
+    z-index: 5;
+    font-size: .9rem;
+}
+
+    .gallery-arrow:hover {
+        background: rgba(0,0,0,.65);
+    }
+
+.gallery-arrow-prev {
+    left: 10px;
+}
+
+.gallery-arrow-next {
+    right: 10px;
+}
+
+@media (max-width: 575.98px) {
+    .gallery-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: .8rem;
+    }
+}
+
+/* ── Thumbnails strip ────────────────────────────────────────────── */
+.gallery-thumbs {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+}
+
+    .gallery-thumbs::-webkit-scrollbar {
+        display: none;
+    }
+
+.gallery-thumb {
+    width: 64px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    opacity: .65;
+    transition: all .15s;
+    flex-shrink: 0;
+}
+
+    .gallery-thumb.active,
+    .gallery-thumb:hover {
+        opacity: 1;
+        border-color: #16a34a;
+    }
+
+@media (max-width: 575.98px) {
+    .gallery-thumb {
+        width: 52px;
+        height: 40px;
+        /* Touch-friendly минимум хэмжээ */
+        min-width: 44px;
+    }
+}
+
+/* ── Lightbox ────────────────────────────────────────────────────── */
+.lb-main-img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 4px;
+    transition: opacity .12s ease;
+    display: block;
+    margin: auto;
+}
+
+@media (max-width: 767.98px) {
+    .lb-main-img {
+        max-height: 60vh;
+    }
+}
+
+.lb-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,.12);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: background .15s;
+    backdrop-filter: blur(4px);
+}
+
+    .lb-arrow:hover {
+        background: rgba(255,255,255,.22);
+    }
+
+.lb-arrow-prev {
+    left: 10px;
+}
+
+.lb-arrow-next {
+    right: 10px;
+}
+
+@media (max-width: 575.98px) {
+    .lb-arrow {
+        width: 38px;
+        height: 38px;
+        font-size: .9rem;
+    }
+}
+
+.lb-thumb {
+    width: 52px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 2px solid transparent;
+    opacity: .55;
+    transition: all .15s;
+    cursor: pointer;
+}
+
+    .lb-thumb.active,
+    .lb-thumb:hover {
+        opacity: 1;
+        border-color: #4ade80;
+    }
+
+/* ── Mobile sidebar spacing ─────────────────────────────────────── */
+@media (max-width: 991.98px) {
+    /* Sidebar mobile-д нэмэлт margin */
+    .d-lg-none .card {
+        margin-bottom: 0;
+    }
+}
+
+/* ── Touch targets on phone ─────────────────────────────────────── */
+@media (max-width: 575.98px) {
+    /* Бүх товч touch-friendly */
+    .btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Feature pill-уудыг томруулах */
+    .badge {
+        padding: 6px 12px !important;
+        font-size: .78rem !important;
+    }
+
+    /* Card доторх padding */
+    .card.p-3 {
+        padding: 14px !important;
+    }
+}
+
+/* ── Mobile fullscreen lightbox ─────────────────────────────────── */
+@media (max-width: 767.98px) {
+    #lightboxModal .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+
+    #lightboxModal .modal-content {
+        height: 100%;
+        border-radius: 0 !important;
+    }
+
+    #lightboxModal .modal-body {
+        min-height: 50vh;
+    }
+}

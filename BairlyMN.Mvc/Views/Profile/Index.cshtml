@@ -1,0 +1,252 @@
+﻿@model ProfileViewModel
+@{
+    ViewData["Title"] = "Профайл";
+    var u = Model.User;
+    var uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<!-- Hero -->
+<div class="profile-hero py-5 text-white">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-center
+            align-items-md-end gap-4">
+            <div class="position-relative">
+                <img src="@(u.AvatarPath ?? "/img/default-avatar.svg")"
+                     class="rounded-circle profile-avatar-ring"
+                     width="110" height="110"
+                     style="object-fit:cover"
+                     onerror="this.src='/img/default-avatar.svg'"
+                     id="profileAvatar" />
+                @if (u.IsVerified)
+                {
+                    <span class="position-absolute bottom-0 end-0
+                        bg-info text-white rounded-circle
+                        d-flex align-items-center justify-content-center"
+                          style="width:28px;height:28px;border:2px solid white">
+                        <i class="bi bi-patch-check-fill" style="font-size:13px"></i>
+                    </span>
+                }
+            </div>
+            <div class="flex-grow-1 text-center text-md-start">
+                <h2 class="fw-800 mb-1">@u.DisplayName</h2>
+                <p class="opacity-75 small mb-0">
+                    <i class="bi bi-envelope me-2"></i>@u.Email
+                </p>
+                @if (!string.IsNullOrEmpty(u.PhoneNumber))
+                {
+                    <p class="opacity-75 small mb-0">
+                        <i class="bi bi-telephone me-2"></i>@u.PhoneNumber
+                    </p>
+                }
+                @if (!string.IsNullOrEmpty(u.Bio))
+                {
+                    <p class="opacity-90 mt-2 mb-0 small">@u.Bio</p>
+                }
+                <p class="opacity-50 small mt-1 mb-0">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    @u.CreatedAt.ToString("yyyy оны MM сар") -аас хэрэглэж байна
+                </p>
+            </div>
+            <a asp-action="Edit"
+                   class="btn btn-light rounded-pill px-4 fw-600 flex-shrink-0">
+                <i class="bi bi-pencil me-2"></i>Профайл засах
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mt-4">
+            <div class="col-4 col-md-3 col-lg-2">
+                <div class="profile-stat">
+                    <div class="fw-800 fs-3">@Model.Listings.Count()</div>
+                    <div class="small opacity-75">Нийт зар</div>
+                </div>
+            </div>
+            <div class="col-4 col-md-3 col-lg-2">
+                <div class="profile-stat">
+                    <div class="fw-800 fs-3">@Model.Listings.Sum(l => l.ViewCount)</div>
+                    <div class="small opacity-75">Нийт үзэлт</div>
+                </div>
+            </div>
+            <div class="col-4 col-md-3 col-lg-2">
+                <div class="profile-stat">
+                    <div class="fw-800 fs-3">@Model.Favorites.Count()</div>
+                    <div class="small opacity-75">Хадгалсан</div>
+                </div>
+            </div>
+            <div class="col-4 col-md-3 col-lg-2">
+                <div class="profile-stat">
+                    <div class="fw-800 fs-3">@Model.Conversations.Count()</div>
+                    <div class="small opacity-75">Яриа</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="container py-4">
+    <ul class="nav nav-tabs border-0 mb-4" id="profileTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-600" data-bs-toggle="tab"
+                    data-bs-target="#myListings" type="button">
+                <i class="bi bi-grid me-2"></i>
+                Миний зарууд
+                <span class="badge bg-success ms-1 rounded-pill"
+                      style="font-size:10px">@Model.Listings.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-600" data-bs-toggle="tab"
+                    data-bs-target="#favorites" type="button">
+                <i class="bi bi-bookmark me-2"></i>
+                Хадгалсан
+                <span class="badge bg-warning ms-1 rounded-pill text-dark"
+                      style="font-size:10px">@Model.Favorites.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-600" data-bs-toggle="tab"
+                    data-bs-target="#chats" type="button">
+                <i class="bi bi-chat me-2"></i>
+                Чат
+                <span class="badge bg-primary ms-1 rounded-pill"
+                      style="font-size:10px">@Model.Conversations.Count()</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- My Listings -->
+        <div class="tab-pane fade show active" id="myListings">
+            @if (!Model.Listings.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size:4rem;color:#cbd5e1"></i>
+                    <h5 class="fw-700 text-muted mt-3">Одоогоор зар байхгүй</h5>
+                    <p class="text-muted small">Та анхны зараа нэмэх үү?</p>
+                    <a asp-controller="Listings" asp-action="Create"
+                           class="btn btn-success rounded-pill px-5 fw-600">
+                        <i class="bi bi-plus me-2"></i>Зар нэмэх
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-end mb-3">
+                    <a asp-controller="Listings" asp-action="Create"
+                           class="btn btn-success btn-sm rounded-pill px-4 fw-600">
+                        <i class="bi bi-plus me-1"></i>Шинэ зар нэмэх
+                    </a>
+                </div>
+                <div class="row g-4">
+                    @foreach (var listing in Model.Listings)
+                    {
+                        <div class="col-sm-6 col-lg-4">
+                            @await Html.PartialAsync("_ListingCard", listing)
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Favorites -->
+        <div class="tab-pane fade" id="favorites">
+            @if (!Model.Favorites.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-bookmark" style="font-size:4rem;color:#cbd5e1"></i>
+                    <h5 class="fw-700 text-muted mt-3">Хадгалсан зар байхгүй</h5>
+                    <p class="text-muted small">
+                        Зарын дэлгэрэнгүй хуудаснаас 🔖 товч дарж хадгална уу
+                    </p>
+                    <a asp-controller="Listings" asp-action="Index"
+                           class="btn btn-outline-success rounded-pill px-5 fw-600">
+                        <i class="bi bi-search me-2"></i>Зарууд харах
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var listing in Model.Favorites)
+                    {
+                        <div class="col-sm-6 col-lg-4">
+                            @await Html.PartialAsync("_ListingCard", listing)
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Chats -->
+        <div class="tab-pane fade" id="chats">
+            @if (!Model.Conversations.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-square" style="font-size:4rem;color:#cbd5e1"></i>
+                    <h5 class="fw-700 text-muted mt-3">Яриа байхгүй</h5>
+                    <p class="text-muted small">
+                        Зарын дэлгэрэнгүйд орж
+                        "Холбоо барих" дарснаар яриа эхлэнэ
+                    </p>
+                    <a asp-controller="Listings" asp-action="Index"
+                           class="btn btn-outline-success rounded-pill px-5 fw-600">
+                        <i class="bi bi-search me-2"></i>Зарууд харах
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush rounded-4 shadow-sm overflow-hidden">
+                    @foreach (var conv in Model.Conversations)
+                    {
+                        var other = conv.InitiatorId == uid
+                            ? conv.Participant
+                            : conv.Initiator;
+                        var lastMsg = conv.Messages?
+                            .OrderByDescending(m => m.SentAt)
+                            .FirstOrDefault();
+
+                        <a asp-controller="Chat" asp-action="Conversation"
+                               asp-route-id="@conv.Id"
+                               class="list-group-item list-group-item-action
+                            d-flex align-items-center gap-3 p-3
+                            text-decoration-none">
+                            <div class="position-relative flex-shrink-0">
+                                <img src="@(other?.AvatarPath ?? "/img/default-avatar.svg")"
+                                     class="rounded-circle"
+                                     width="50" height="50"
+                                     style="object-fit:cover"
+                                     onerror="this.src='/img/default-avatar.svg'" />
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="fw-600 text-dark">
+                                        @other?.DisplayName
+                                    </span>
+                                    <small class="text-muted flex-shrink-0 ms-2">
+                                        @conv.LastMessageAt.ToString("MM/dd HH:mm")
+                                    </small>
+                                </div>
+                                @if (conv.Listing != null)
+                                {
+                                    <div class="text-success small text-truncate">
+                                        <i class="bi bi-house me-1"></i>@conv.Listing.Title
+                                    </div>
+                                }
+                                @if (lastMsg != null)
+                                {
+                                    <p class="text-muted small mb-0 text-truncate">
+                                        @(lastMsg.SenderId == uid ? "Та: " : "")
+                                        @lastMsg.Content
+                                    </p>
+                                }
+                            </div>
+                            <i class="bi bi-chevron-right text-muted flex-shrink-0"></i>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

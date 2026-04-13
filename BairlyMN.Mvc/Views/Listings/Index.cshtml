@@ -1,0 +1,638 @@
+﻿@model ListingIndexViewModel
+@{
+    ViewData["Title"] = "Зарууд";
+    var banners = ViewBag.Banners as List<BairlyMN.Data.Entities.Banner>
+                  ?? new List<BairlyMN.Data.Entities.Banner>();
+
+    int mobileFilterCount = 0;
+    if (Model.Filter.PropertyType.HasValue)    mobileFilterCount++;
+    if (Model.Filter.TransactionType.HasValue) mobileFilterCount++;
+    if (Model.Filter.LocationNodeId.HasValue)  mobileFilterCount++;
+    if (Model.Filter.MinPrice.HasValue || Model.Filter.MaxPrice.HasValue) mobileFilterCount++;
+    if (Model.Filter.MinArea.HasValue  || Model.Filter.MaxArea.HasValue)  mobileFilterCount++;
+    if (Model.Filter.MinRooms.HasValue)   mobileFilterCount++;
+    if (Model.Filter.CategoryId.HasValue) mobileFilterCount++;
+}
+
+<div class="bg-light py-2 py-md-3 border-bottom">
+    <div class="container">
+        <nav><ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" class="text-success">Нүүр</a>
+            </li>
+            <li class="breadcrumb-item active">Зарууд</li>
+        </ol></nav>
+    </div>
+</div>
+
+<!-- ══ MAIN CONTENT ═════════════════════════════════════════════ -->
+<div class="container py-3 py-md-4">
+    <div class="row g-3 g-md-4">
+
+        <!-- ── Sidebar ─────────────────────────────────────────── -->
+        <div class="col-lg-3 listings-sidebar">
+
+            <!-- Mobile toggle товч — зөвхөн lg-аас доош харагдана -->
+            <button class="filter-toggle-btn d-lg-none" id="filterToggle"
+                    onclick="toggleFilter()" type="button">
+                <i class="bi bi-funnel text-success"></i>
+                <span>Шүүлтүүр</span>
+                @if (mobileFilterCount > 0)
+                {
+                    <span class="badge bg-success rounded-pill ms-1"
+                          style="font-size:.68rem">@mobileFilterCount</span>
+                }
+                <i class="bi bi-chevron-down filter-arrow ms-auto"></i>
+            </button>
+
+            <!-- Collapse wrapper -->
+            <div class="filter-collapse-wrapper @(mobileFilterCount > 0 ? "open" : "")"
+                 id="filterCollapse">
+                <div class="card border-0 shadow-sm rounded-4" id="sidebarCard">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-700 mb-0">
+                                <i class="bi bi-funnel me-2 text-success"></i>Шүүлтүүр
+                            </h5>
+                            <a asp-controller="Listings" asp-action="Index"
+                               class="btn btn-sm btn-light rounded-pill text-muted"
+                               style="font-size:.78rem">
+                                <i class="bi bi-x me-1"></i>Цэвэрлэх
+                            </a>
+                        </div>
+
+                        <form asp-controller="Listings" asp-action="Index"
+                              method="get" id="filterForm">
+                            <input type="hidden" name="Page" value="1" />
+
+                            <!-- Хайлт -->
+                            <div class="mb-3">
+                                <label class="filter-label">Хайлт</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-search text-muted" style="font-size:.8rem"></i>
+                                    </span>
+                                    <input type="text" name="Search"
+                                           value="@Model.Filter.Search"
+                                           class="form-control form-control-sm border-start-0"
+                                           placeholder="Гарчиг, байршил..." />
+                                </div>
+                            </div>
+
+                            <!-- Гүйлгээний төрөл -->
+                            <div class="mb-3">
+                                <label class="filter-label">Гүйлгээний төрөл</label>
+                                <div class="d-flex gap-1">
+                                    @{ var tx = Model.Filter.TransactionType; }
+                                    <input type="radio" class="btn-check" name="TransactionType"
+                                           id="txAll" value="" @(tx == null ? "checked" : "") />
+                                    <label class="btn btn-sm btn-outline-secondary rounded-pill flex-fill"
+                                           for="txAll" style="font-size:.78rem">Бүгд</label>
+
+                                    <input type="radio" class="btn-check" name="TransactionType"
+                                           id="txSale" value="1"
+                                           @(tx == BairlyMN.Domain.Enums.TransactionType.Sale ? "checked" : "") />
+                                    <label class="btn btn-sm btn-outline-success rounded-pill flex-fill"
+                                           for="txSale" style="font-size:.78rem">Худалдах</label>
+
+                                    <input type="radio" class="btn-check" name="TransactionType"
+                                           id="txRent" value="2"
+                                           @(tx == BairlyMN.Domain.Enums.TransactionType.Rent ? "checked" : "") />
+                                    <label class="btn btn-sm btn-outline-primary rounded-pill flex-fill"
+                                           for="txRent" style="font-size:.78rem">Түрээс</label>
+                                </div>
+                            </div>
+
+                            <!-- Үл хөдлөхийн төрөл -->
+                            <div class="mb-3">
+                                <label class="filter-label">Үл хөдлөхийн төрөл</label>
+                                <div class="d-flex flex-column gap-1">
+                                    @{
+                                        var pt = Model.Filter.PropertyType;
+                                        var ptItems = new[]
+                                        {
+                                            ("", "bi-grid", "Бүгд"),
+                                            ("1", "bi-building", "Орон сууц"),
+                                            ("2", "bi-house-door", "Байшин"),
+                                            ("3", "bi-map", "Газар"),
+                                            ("4", "bi-briefcase", "Оффис"),
+                                            ("5", "bi-box-seam", "Агуулах"),
+                                        };
+                                    }
+                                    @foreach (var (val, icon, label) in ptItems)
+                                    {
+                                        var isChecked = val == "" ? pt == null : pt?.ToString() == EnumName(val);
+                                        <div class="filter-check @(isChecked ? "active" : "")">
+                                            <input class="form-check-input" type="radio"
+                                                   name="PropertyType" id="pt_@val" value="@val"
+                                                   @(isChecked ? "checked" : "") />
+                                            <label class="form-check-label w-100 d-flex align-items-center gap-2"
+                                                   for="pt_@val">
+                                                <i class="bi @icon text-success"
+                                                   style="font-size:.85rem;width:16px"></i>
+                                                <span style="font-size:.85rem">@label</span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Байршил -->
+                            <div class="mb-3">
+                                <label class="filter-label">Байршил</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <select class="form-select form-select-sm rounded-3"
+                                            id="filter_l1" onchange="filterL1Change(this)">
+                                        <option value="">— Хот / Аймаг —</option>
+                                    </select>
+                                    <select class="form-select form-select-sm rounded-3"
+                                            id="filter_l2" disabled onchange="filterL2Change(this)">
+                                        <option value="">— Дүүрэг / Сум —</option>
+                                    </select>
+                                    <select class="form-select form-select-sm rounded-3"
+                                            id="filter_l3" disabled onchange="filterL3Change(this)">
+                                        <option value="">— Хороо / Баг —</option>
+                                    </select>
+                                    <input type="hidden" name="LocationNodeId"
+                                           id="filter_locId" value="@Model.Filter.LocationNodeId" />
+                                </div>
+                            </div>
+
+                            <!-- Ангилал -->
+                            <div class="mb-3">
+                                <label class="filter-label">Ангилал</label>
+                                <select name="CategoryId" class="form-select form-select-sm rounded-3">
+                                    <option value="">Бүгд</option>
+                                    @foreach (var c in Model.Categories)
+                                    {
+                                        <option value="@c.Value"
+                                                selected="@(Model.Filter.CategoryId?.ToString() == c.Value ? "selected" : null)">
+                                            @c.Text
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Үнийн хязгаар -->
+                            <div class="mb-3">
+                                <label class="filter-label">Үнийн хязгаар (₮)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="number" name="MinPrice" value="@Model.Filter.MinPrice"
+                                               class="form-control form-control-sm rounded-3"
+                                               placeholder="Доод" min="0" />
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" name="MaxPrice" value="@Model.Filter.MaxPrice"
+                                               class="form-control form-control-sm rounded-3"
+                                               placeholder="Дээд" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Талбай -->
+                            <div class="mb-3">
+                                <label class="filter-label">Талбай (м²)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="number" name="MinArea" value="@Model.Filter.MinArea"
+                                               class="form-control form-control-sm rounded-3"
+                                               placeholder="Доод" min="0" />
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" name="MaxArea" value="@Model.Filter.MaxArea"
+                                               class="form-control form-control-sm rounded-3"
+                                               placeholder="Дээд" min="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Өрөөний тоо -->
+                            <div class="mb-4">
+                                <label class="filter-label">Өрөөний тоо</label>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    @foreach (var r in new[] { "1","2","3","4","5+" })
+                                    {
+                                        var rVal     = r == "5+" ? "5" : r;
+                                        var isActive = Model.Filter.MinRooms?.ToString() == rVal;
+                                        <button type="button"
+                                                class="btn btn-sm rounded-pill room-btn @(isActive ? "btn-success" : "btn-light")"
+                                                data-val="@rVal" onclick="setRoom(this,'@rVal')"
+                                                style="font-size:.78rem;min-width:36px">
+                                            @r
+                                        </button>
+                                    }
+                                </div>
+                                <input type="hidden" name="MinRooms" id="minRoomsInput"
+                                       value="@Model.Filter.MinRooms" />
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-success w-100 rounded-pill fw-700 py-2">
+                                <i class="bi bi-search me-2"></i>Хайх
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Grid ──────────────────────────────────────────────── -->
+        <div class="col-lg-9">
+
+            <!-- ══ AD BANNER ══════════════════════════════════════ -->
+            @if (banners.Any())
+            {
+                <div class="listing-ad-banner mb-3">
+                    <div id="listingAdBanner" class="carousel slide"
+                         data-bs-ride="carousel" data-bs-interval="3500">
+                        <div class="carousel-inner rounded-3 overflow-hidden">
+                            @{ int bi = 0; }
+                            @foreach (var b in banners)
+                            {
+                                var hPx = b.Height > 0 ? b.Height : 120;
+                                <div class="carousel-item @(bi == 0 ? "active" : "")">
+                                    @if (!string.IsNullOrEmpty(b.LinkUrl))
+                                    {
+                                        <a href="@b.LinkUrl" target="_blank" rel="noopener"
+                                           class="d-block text-decoration-none">
+                                            <div class="lab-inner" style="--lab-h:@(hPx)px">
+                                                <img src="@b.ImagePath" class="lab-img"
+                                                     alt="@(b.Title ?? "")"
+                                                     onerror="this.style.display='none'" />
+                                                @if (!string.IsNullOrEmpty(b.Title) || !string.IsNullOrEmpty(b.Subtitle))
+                                                {
+                                                    <div class="lab-content">
+                                                        <div class="lab-text-box">
+                                                            @if (!string.IsNullOrEmpty(b.Title))
+                                                            { <span class="lab-title">@b.Title</span> }
+                                                            @if (!string.IsNullOrEmpty(b.Subtitle))
+                                                            { <span class="lab-sub">@b.Subtitle</span> }
+                                                        </div>
+                                                        <span class="lab-cta">Дэлгэрэнгүй →</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <div class="lab-inner" style="--lab-h:@(hPx)px">
+                                            <img src="@b.ImagePath" class="lab-img"
+                                                 alt="@(b.Title ?? "")"
+                                                 onerror="this.style.display='none'" />
+                                            @if (!string.IsNullOrEmpty(b.Title) || !string.IsNullOrEmpty(b.Subtitle))
+                                            {
+                                                <div class="lab-content">
+                                                    <div class="lab-text-box">
+                                                        @if (!string.IsNullOrEmpty(b.Title))
+                                                        { <span class="lab-title">@b.Title</span> }
+                                                        @if (!string.IsNullOrEmpty(b.Subtitle))
+                                                        { <span class="lab-sub">@b.Subtitle</span> }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                bi++;
+                            }
+                        </div>
+                        @if (banners.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button"
+                                    data-bs-target="#listingAdBanner" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" style="width:18px;height:18px"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button"
+                                    data-bs-target="#listingAdBanner" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" style="width:18px;height:18px"></span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ── Header ───────────────────────────────────────── -->
+            <div class="d-flex justify-content-between align-items-center mb-3 listing-index-header">
+                <div>
+                    <h4 class="fw-800 mb-0">
+                        @if (!string.IsNullOrEmpty(Model.Filter.Search))
+                        { <span>"@Model.Filter.Search"</span> }
+                        else
+                        { <span>Бүх зарууд</span> }
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Нийт <strong class="text-success">@Model.Pagination.TotalCount.ToString("N0")</strong> зар олдлоо
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    @if (mobileFilterCount > 0)
+                    {
+                        <span class="badge bg-success rounded-pill d-none d-sm-inline"
+                              style="font-size:.72rem">@mobileFilterCount шүүлтүүр</span>
+                    }
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Listings" asp-action="Create"
+                           class="btn btn-success rounded-pill px-3 fw-600"
+                           style="font-size:.85rem">
+                            <i class="bi bi-plus me-1"></i>
+                            <span class="d-none d-sm-inline">Зар нэмэх</span>
+                            <span class="d-sm-none">Нэмэх</span>
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- ── Listings ─────────────────────────────────────── -->
+            @if (!Model.Listings.Any())
+            {
+                <div class="text-center py-5">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width:72px;height:72px;background:#f0fdf4">
+                        <i class="bi bi-search text-success fs-2"></i>
+                    </div>
+                    <h5 class="fw-700">Зар олдсонгүй</h5>
+                    <p class="text-muted small">Шүүлтүүрийн нөхцөлийг өөрчилж дахин хайна уу</p>
+                    <a asp-controller="Listings" asp-action="Index"
+                       class="btn btn-outline-success rounded-pill px-5 fw-600">
+                        <i class="bi bi-arrow-left me-2"></i>Бүх зар харах
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3 listing-index-grid">
+                    @foreach (var listing in Model.Listings)
+                    {
+                        <div class="col-12 col-sm-6 col-md-4">
+                            @await Html.PartialAsync("_ListingCard", listing)
+                        </div>
+                    }
+                </div>
+
+                @if (Model.Pagination.TotalPages > 1)
+                {
+                    <nav class="mt-4 mt-md-5 d-flex justify-content-center">
+                        <ul class="pagination gap-1 mb-0">
+                            <li class="page-item @(!Model.Pagination.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link rounded-3"
+                                   asp-controller="Listings" asp-action="Index"
+                                   asp-route-Page="@(Model.Pagination.CurrentPage - 1)"
+                                   asp-route-Search="@Model.Filter.Search"
+                                   asp-route-PropertyType="@((int?)Model.Filter.PropertyType)"
+                                   asp-route-TransactionType="@((int?)Model.Filter.TransactionType)"
+                                   asp-route-LocationNodeId="@Model.Filter.LocationNodeId"
+                                   asp-route-MinPrice="@Model.Filter.MinPrice"
+                                   asp-route-MaxPrice="@Model.Filter.MaxPrice"
+                                   asp-route-MinArea="@Model.Filter.MinArea"
+                                   asp-route-MaxArea="@Model.Filter.MaxArea"
+                                   asp-route-MinRooms="@Model.Filter.MinRooms"
+                                   asp-route-CategoryId="@Model.Filter.CategoryId">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @{
+                                int sp = Math.Max(1, Model.Pagination.CurrentPage - 2);
+                                int ep = Math.Min(Model.Pagination.TotalPages, Model.Pagination.CurrentPage + 2);
+                            }
+                            @if (sp > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link rounded-3"
+                                       asp-controller="Listings" asp-action="Index"
+                                       asp-route-Page="1">1</a>
+                                </li>
+                                @if (sp > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link border-0 bg-transparent">…</span>
+                                    </li>
+                                }
+                            }
+                            @for (int p = sp; p <= ep; p++)
+                            {
+                                <li class="page-item @(p == Model.Pagination.CurrentPage ? "active" : "")">
+                                    <a class="page-link rounded-3"
+                                       asp-controller="Listings" asp-action="Index"
+                                       asp-route-Page="@p"
+                                       asp-route-Search="@Model.Filter.Search"
+                                       asp-route-PropertyType="@((int?)Model.Filter.PropertyType)"
+                                       asp-route-TransactionType="@((int?)Model.Filter.TransactionType)"
+                                       asp-route-LocationNodeId="@Model.Filter.LocationNodeId"
+                                       asp-route-MinPrice="@Model.Filter.MinPrice"
+                                       asp-route-MaxPrice="@Model.Filter.MaxPrice"
+                                       asp-route-MinArea="@Model.Filter.MinArea"
+                                       asp-route-MaxArea="@Model.Filter.MaxArea"
+                                       asp-route-MinRooms="@Model.Filter.MinRooms"
+                                       asp-route-CategoryId="@Model.Filter.CategoryId">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                            @if (ep < Model.Pagination.TotalPages)
+                            {
+                                @if (ep < Model.Pagination.TotalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link border-0 bg-transparent">…</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link rounded-3"
+                                       asp-controller="Listings" asp-action="Index"
+                                       asp-route-Page="@Model.Pagination.TotalPages">
+                                        @Model.Pagination.TotalPages
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.Pagination.HasNextPage ? "disabled" : "")">
+                                <a class="page-link rounded-3"
+                                   asp-controller="Listings" asp-action="Index"
+                                   asp-route-Page="@(Model.Pagination.CurrentPage + 1)"
+                                   asp-route-Search="@Model.Filter.Search"
+                                   asp-route-PropertyType="@((int?)Model.Filter.PropertyType)"
+                                   asp-route-TransactionType="@((int?)Model.Filter.TransactionType)"
+                                   asp-route-LocationNodeId="@Model.Filter.LocationNodeId"
+                                   asp-route-MinPrice="@Model.Filter.MinPrice"
+                                   asp-route-MaxPrice="@Model.Filter.MaxPrice"
+                                   asp-route-MinArea="@Model.Filter.MinArea"
+                                   asp-route-MaxArea="@Model.Filter.MaxArea"
+                                   asp-route-MinRooms="@Model.Filter.MinRooms"
+                                   asp-route-CategoryId="@Model.Filter.CategoryId">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <p class="text-center text-muted small mt-2">
+                        @Model.Pagination.CurrentPage / @Model.Pagination.TotalPages хуудас
+                    </p>
+                }
+            }
+        </div><!-- /col-lg-9 -->
+    </div><!-- /row -->
+</div><!-- /container -->
+
+@section Styles {
+<style>
+.filter-label {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #64748b;
+    display: block;
+    margin-bottom: 6px;
+}
+.filter-check {
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    cursor: pointer;
+    transition: all .15s;
+}
+.filter-check:hover  { border-color: #16a34a; background: #f0fdf4; }
+.filter-check.active { border-color: #16a34a; background: #dcfce7; }
+.filter-check .form-check-input { display: none; }
+.filter-check label  { cursor: pointer; }
+.btn-check:checked + .btn-outline-success   { background:#16a34a!important;color:white!important;border-color:#16a34a!important; }
+.btn-check:checked + .btn-outline-secondary { background:#64748b!important;color:white!important;border-color:#64748b!important; }
+.btn-check:checked + .btn-outline-primary   { background:#2563eb!important;color:white!important;border-color:#2563eb!important; }
+
+/* ── Mobile filter toggle ─────────────────────── */
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: .9rem;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    transition: all .15s;
+    margin-bottom: 8px;
+}
+.filter-toggle-btn:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+    color: #16a34a;
+}
+.filter-toggle-btn .filter-arrow { transition: transform .25s ease; }
+.filter-toggle-btn.open .filter-arrow { transform: rotate(180deg); }
+
+/* ── Collapse ─────────────────────────────────── */
+.filter-collapse-wrapper {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .35s ease;
+}
+.filter-collapse-wrapper.open { max-height: 3000px; }
+
+@@media (min-width: 992px) {
+    .filter-toggle-btn { display: none !important; }
+    .filter-collapse-wrapper { max-height: none !important; overflow: visible !important; }
+    #sidebarCard { position: sticky; top: 80px; }
+}
+@@media (max-width: 991.98px) {
+    #sidebarCard { position: relative !important; top: auto !important; }
+}
+</style>
+}
+
+@section Scripts {
+<script>
+function toggleFilter() {
+    const btn = document.getElementById('filterToggle');
+    const col = document.getElementById('filterCollapse');
+    const open = col.classList.contains('open');
+    btn.classList.toggle('open', !open);
+    col.classList.toggle('open', !open);
+}
+
+const selectedLocId = @Html.Raw(Model.Filter.LocationNodeId?.ToString() ?? "null");
+
+async function locFetch(url) {
+    try { const r = await fetch(url,{headers:{Accept:'application/json'}}); return r.ok ? await r.json() : []; }
+    catch { return []; }
+}
+function locPopulate(el, items, ph) {
+    el.innerHTML = `<option value="">${ph}</option>`;
+    items.forEach(i => { const o=document.createElement('option'); o.value=i.id; o.textContent=i.name; el.appendChild(o); });
+}
+function locReset(el, ph) { locPopulate(el,[],ph); el.disabled=true; }
+function locSetFinal(v) { document.getElementById('filter_locId').value = v??''; }
+
+async function filterL1Change(sel) {
+    const id=sel.value;
+    locReset(document.getElementById('filter_l2'),'— Дүүрэг / Сум —');
+    locReset(document.getElementById('filter_l3'),'— Хороо / Баг —');
+    locSetFinal(id||null);
+    if (!id) return;
+    const l2El=document.getElementById('filter_l2');
+    const kids=await locFetch(`/api/location/children/${id}`);
+    if (!kids.length) return;
+    locPopulate(l2El,kids,'— Дүүрэг / Сум —'); l2El.disabled=false;
+}
+async function filterL2Change(sel) {
+    const id=sel.value;
+    locReset(document.getElementById('filter_l3'),'— Хороо / Баг —');
+    if (!id){ locSetFinal(document.getElementById('filter_l1').value||null); return; }
+    locSetFinal(id);
+    const l3El=document.getElementById('filter_l3');
+    const kids=await locFetch(`/api/location/children/${id}`);
+    if (!kids.length) return;
+    locPopulate(l3El,kids,'— Хороо / Баг —'); l3El.disabled=false;
+}
+function filterL3Change(sel) {
+    locSetFinal(sel.value||document.getElementById('filter_l2').value||document.getElementById('filter_l1').value||null);
+}
+async function initFilterLocation() {
+    if (!selectedLocId) return;
+    try {
+        const anc=await locFetch(`/api/location/ancestors/${selectedLocId}`);
+        if (!anc.length) return;
+        const [a1,a2,a3]=anc;
+        const l1El=document.getElementById('filter_l1');
+        const l2El=document.getElementById('filter_l2');
+        const l3El=document.getElementById('filter_l3');
+        if (a1){ l1El.value=a1.id; const k=await locFetch(`/api/location/children/${a1.id}`); locPopulate(l2El,k,'— Дүүрэг / Сум —'); l2El.disabled=false; }
+        if (a2){ l2El.value=a2.id; const k=await locFetch(`/api/location/children/${a2.id}`); if(k.length){locPopulate(l3El,k,'— Хороо / Баг —');l3El.disabled=false;} }
+        if (a3) l3El.value=a3.id;
+        locSetFinal(selectedLocId);
+    } catch(e){ console.warn('loc err:',e); }
+}
+document.addEventListener('DOMContentLoaded', async ()=>{
+    const l1El=document.getElementById('filter_l1');
+    const nodes=await locFetch('/api/location/level1');
+    locPopulate(l1El,nodes,'— Хот / Аймаг —'); l1El.disabled=false;
+    await initFilterLocation();
+
+    if (window.innerWidth < 992) {
+        const col=document.getElementById('filterCollapse');
+        const btn=document.getElementById('filterToggle');
+        if (col?.classList.contains('open')) btn?.classList.add('open');
+    }
+});
+function setRoom(btn,val){
+    const input=document.getElementById('minRoomsInput');
+    document.querySelectorAll('.room-btn').forEach(b=>b.classList.replace('btn-success','btn-light'));
+    if(input.value===val){ input.value=''; }
+    else { input.value=val; btn.classList.replace('btn-light','btn-success'); }
+}
+</script>
+}
+
+@functions {
+    string EnumName(string val) => val switch {
+        "1" => "Apartment", "2" => "House",    "3" => "Land",
+        "4" => "Office",    "5" => "Warehouse", _ => ""
+    };
+}

@@ -1,0 +1,272 @@
+﻿@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Админ Панел";
+    Layout = "_Layout";
+}
+
+<!-- Admin navbar supplement -->
+<div class="bg-dark text-white py-2 border-bottom border-secondary">
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center gap-3 small">
+            <a asp-action="Dashboard"
+                   class="text-white text-decoration-none fw-600 d-flex align-items-center gap-1">
+                <i class="bi bi-speedometer2"></i>Самбар
+            </a>
+            <span class="text-secondary">|</span>
+            <a asp-action="Listings"
+                   class="text-white-50 text-decoration-none">
+                <i class="bi bi-grid me-1"></i>Зарууд
+            </a>
+            <a asp-action="Banners"
+                   class="text-white-50 text-decoration-none">
+                <i class="bi bi-images me-1"></i>Баннерууд
+            </a>
+            <a asp-action="Users"
+                   class="text-white-50 text-decoration-none">
+                <i class="bi bi-people me-1"></i>Хэрэглэгчид
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light min-vh-100">
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-800 mb-0">
+                    <i class="bi bi-speedometer2 text-success me-2"></i>
+                    Удирдлагын самбар
+                </h3>
+                <p class="text-muted small mb-0">
+                    @DateTime.Now.ToString("yyyy оны MM сарын dd")
+                </p>
+            </div>
+            <a asp-controller="Listings" asp-action="Create"
+                   class="btn btn-success rounded-pill fw-600 px-4">
+                <i class="bi bi-plus me-1"></i>Зар нэмэх
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            @{
+                var statItems = new[]
+                {
+                    ("Нийт зар",     "TotalListings",  "bi-grid-fill",       "#16a34a", "#dcfce7"),
+                    ("Идэвхтэй зар", "ActiveListings", "bi-check-circle-fill","#2563eb","#dbeafe"),
+                    ("Хэрэглэгч",    "TotalUsers",     "bi-people-fill",     "#7c3aed","#ede9fe"),
+                    ("Мессеж",       "TotalMessages",  "bi-chat-dots-fill",  "#0891b2","#cffafe"),
+                    ("Баннер",       "TotalBanners",   "bi-image-fill",      "#d97706","#fef3c7"),
+                };
+            }
+            @foreach (var (label, key, icon, color, bg) in statItems)
+            {
+                var val = Model.Stats.GetValueOrDefault(key, 0);
+                <div class="col-6 col-md-4 col-xl">
+                    <div class="card border-0 rounded-4 h-100"
+                         style="background:white;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center"
+                                     style="width:46px;height:46px;background:@bg">
+                                    <i class="bi @icon" style="font-size:1.25rem;color:@color"></i>
+                                </div>
+                                <span class="badge rounded-pill fw-600"
+                                      style="background:@bg;color:@color;font-size:.75rem">
+                                    +0 өнөөдөр
+                                </span>
+                            </div>
+                            <div class="fw-800" style="font-size:1.8rem;line-height:1">
+                                @val.ToString("N0")
+                            </div>
+                            <div class="text-muted small mt-1">@label</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="row g-4">
+            <!-- Recent listings -->
+            <div class="col-lg-8">
+                <div class="card border-0 rounded-4"
+                     style="box-shadow:0 1px 3px rgba(0,0,0,.07)">
+                    <div class="card-body p-0">
+                        <div class="d-flex align-items-center justify-content-between p-4 pb-0">
+                            <h5 class="fw-700 mb-0">Сүүлийн зарууд</h5>
+                            <a asp-action="Listings"
+                                   class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                Бүгдийг харах
+                            </a>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4 fw-600 small text-muted text-uppercase"
+                                            style="font-size:.7rem;letter-spacing:.08em;padding:12px 16px;
+                                            background:#f8fafc;border:none">
+                                            Зар
+                                        </th>
+                                        <th class="fw-600 small text-muted text-uppercase"
+                                            style="font-size:.7rem;letter-spacing:.08em;padding:12px 16px;
+                                            background:#f8fafc;border:none">
+                                            Эзэн
+                                        </th>
+                                        <th class="fw-600 small text-muted text-uppercase"
+                                            style="font-size:.7rem;letter-spacing:.08em;padding:12px 16px;
+                                            background:#f8fafc;border:none">
+                                            Үнэ
+                                        </th>
+                                        <th class="fw-600 small text-muted text-uppercase"
+                                            style="font-size:.7rem;letter-spacing:.08em;padding:12px 16px;
+                                            background:#f8fafc;border:none">
+                                            Огноо
+                                        </th>
+                                        <th class="fw-600 small text-muted text-uppercase pe-4"
+                                            style="font-size:.7rem;letter-spacing:.08em;padding:12px 16px;
+                                            background:#f8fafc;border:none">
+                                            Төлөв
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var l in Model.RecentListings)
+                                    {
+                                        <tr style="border-color:#f1f5f9">
+                                            <td class="ps-4">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="@(l.Images?.FirstOrDefault()?.ImagePath ?? "/img/no-image.svg")"
+                                                         class="rounded-2 flex-shrink-0"
+                                                         width="40" height="32"
+                                                         style="object-fit:cover"
+                                                         onerror="this.src='/img/no-image.svg'" />
+                                                    <div>
+                                                        <a asp-controller="Listings"
+                                                               asp-action="Details"
+                                                               asp-route-id="@l.Id"
+                                                               class="text-decoration-none text-dark fw-600 small"
+                                                               style="max-width:180px;display:block;
+                                                            white-space:nowrap;overflow:hidden;
+                                                            text-overflow:ellipsis">
+                                                            @l.Title
+                                                        </a>
+                                                        <div class="text-muted"
+                                                             style="font-size:11px">
+                                                            @(l.PropertyType switch
+                                                            {
+                                                                PropertyType.Apartment => "Орон сууц",
+                                                                PropertyType.House => "Байшин",
+                                                                PropertyType.Land => "Газар",
+                                                                _ => "Бусад"
+                                                            })
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img src="@(l.User?.AvatarPath ?? "/img/default-avatar.svg")"
+                                                         class="rounded-circle flex-shrink-0"
+                                                         width="28" height="28"
+                                                         style="object-fit:cover"
+                                                         onerror="this.src='/img/default-avatar.svg'" />
+                                                    <span class="small text-muted">
+                                                        @l.User?.DisplayName
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="fw-700 small" style="color:#16a34a">
+                                                @l.Price.ToString("N0") ₮
+                                            </td>
+                                            <td class="small text-muted">
+                                                @l.CreatedAt.ToString("MM/dd")
+                                            </td>
+                                            <td class="pe-4">
+                                                <span class="badge rounded-pill fw-500"
+                                                      style="font-size:.72rem;
+                                                    @(l.Status == BairlyMN.Domain.Enums.ListingStatus.Active
+                                                                                                             ? "background:#dcfce7;color:#166534"
+                                                                                                             : "background:#f1f5f9;color:#64748b")">
+                                                    @(l.Status == BairlyMN.Domain.Enums.ListingStatus.Active
+                                                        ? "Идэвхтэй" : "Идэвхгүй")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent users -->
+            <div class="col-lg-4">
+                <div class="card border-0 rounded-4 h-100"
+                     style="box-shadow:0 1px 3px rgba(0,0,0,.07)">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-700 mb-0">Шинэ хэрэглэгчид</h5>
+                            <a asp-action="Users"
+                                   class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                Бүгдийг харах
+                            </a>
+                        </div>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var u in Model.RecentUsers)
+                            {
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@(u.AvatarPath ?? "/img/default-avatar.svg")"
+                                         class="rounded-circle flex-shrink-0"
+                                         width="42" height="42"
+                                         style="object-fit:cover;border:2px solid #e2e8f0"
+                                         onerror="this.src='/img/default-avatar.svg'" />
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-600 small text-truncate">
+                                            @u.DisplayName
+                                        </div>
+                                        <div class="text-muted text-truncate"
+                                             style="font-size:11px">
+                                            @u.Email
+                                        </div>
+                                    </div>
+                                    <div class="text-muted flex-shrink-0"
+                                         style="font-size:11px">
+                                        @u.CreatedAt.ToString("MM/dd")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Quick actions -->
+                        <div class="mt-4 pt-4 border-top">
+                            <h6 class="fw-700 mb-3 text-muted small text-uppercase">
+                                Хурдан үйлдэл
+                            </h6>
+                            <div class="d-flex flex-column gap-2">
+                                <a asp-action="CreateBanner"
+                                       class="btn btn-light rounded-3 text-start fw-500 small">
+                                    <i class="bi bi-image me-2 text-success"></i>
+                                    Баннер нэмэх
+                                </a>
+                                <a asp-controller="Listings" asp-action="Create"
+                                       class="btn btn-light rounded-3 text-start fw-500 small">
+                                    <i class="bi bi-plus-circle me-2 text-success"></i>
+                                    Зар нэмэх
+                                </a>
+                                <a asp-action="Users"
+                                       class="btn btn-light rounded-3 text-start fw-500 small">
+                                    <i class="bi bi-people me-2 text-success"></i>
+                                    Хэрэглэгчид харах
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,163 @@
+﻿@model BairlyMN.Mvc.ViewModels.BannerEditViewModel
+@{
+    ViewData["Title"] = "Баннер засах"; var cur = Model.Height.ToString();
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container py-4" style="max-width:680px">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a asp-controller="Admin" asp-action="Banners"
+                   class="btn btn-light rounded-circle"
+                   style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="fw-800 mb-0">Баннер засах</h4>
+        </div>
+
+        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+            <div class="card-header p-4"
+                 style="background:linear-gradient(135deg,#1d4ed8,#3b82f6)">
+                <h5 class="fw-700 text-white mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Засварлах
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-controller="Admin" asp-action="EditBanner"
+                      asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Зураг -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600">
+                            Зураг солих <span class="text-muted fw-400 small">(заавал биш)</span>
+                        </label>
+                        @if (!string.IsNullOrEmpty(Model.CurrentImagePath))
+                        {
+                            <div class="current-banner-preview rounded-3 mb-2 overflow-hidden position-relative"
+                                 id="currentImgWrap">
+                                <img src="@Model.CurrentImagePath" id="editPreview"
+                                     class="w-100 h-100"
+                                     style="object-fit:cover;display:block"
+                                     onerror="this.parentElement.style.display='none'" />
+                                <div class="position-absolute top-0 start-0 m-2">
+                                    <span class="badge rounded-pill"
+                                          style="background:rgba(0,0,0,.55);color:white;
+                                        font-size:.68rem;backdrop-filter:blur(4px)">
+                                        Одоогийн зураг
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                        <div class="banner-drop-zone-sm rounded-3 text-center"
+                             onclick="document.getElementById('editBannerImg').click()">
+                            <i class="bi bi-cloud-arrow-up text-success me-2" style="font-size:1.2rem"></i>
+                            <span class="small fw-600">Шинэ зураг сонгох</span>
+                            <span class="text-muted small ms-1">(.jpg .png .webp)</span>
+                            <input type="file" asp-for="ImageFile" id="editBannerImg"
+                                   accept="image/jpeg,image/png,image/webp"
+                                   class="d-none" onchange="previewEdit(this)" />
+                        </div>
+                    </div>
+
+                    <!-- Гарчиг -->
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-600">
+                            Гарчиг <span class="text-muted fw-400 small">(заавал биш)</span>
+                        </label>
+                        <input asp-for="Title" class="form-control rounded-3"
+                               placeholder="Баннерын гарчиг..." />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subtitle" class="form-label fw-600">
+                            Дэд гарчиг <span class="text-muted fw-400 small">(заавал биш)</span>
+                        </label>
+                        <input asp-for="Subtitle" class="form-control rounded-3"
+                               placeholder="Нэмэлт тайлбар..." />
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="LinkUrl" class="form-label fw-600">
+                            Холбоос URL <span class="text-muted fw-400 small">(заавал биш)</span>
+                        </label>
+                        <input asp-for="LinkUrl" class="form-control rounded-3"
+                               placeholder="https://..." type="url" />
+                    </div>
+
+                    <!-- Өндөр хэмжээ -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600 d-block mb-2">Баннерын өндөр хэмжээ</label>
+                        <div class="row g-2">
+                            @foreach (var (enumVal, px, lbl, range, barH) in new[] {
+                                ("Small",  "80",  "Жижиг", "80px / 110px",  "8px"),
+                                ("Medium", "120", "Дунд",  "120px / 180px", "14px"),
+                                ("Large",  "180", "Том",   "180px / 300px", "20px"),
+                                ("Full",   "260", "Бүтэн", "260px / 440px", "28px"),
+                            })
+                            {
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check"
+                                           name="Height" id="h_@enumVal" value="@px"
+                                    @(cur == enumVal ? "checked" : "") />
+                                    <label class="btn btn-outline-secondary w-100 rounded-3 p-2 text-start banner-size-btn"
+                                           for="h_@enumVal">
+                                        <div style="height:@barH;background:linear-gradient(90deg,#166534,#16a34a);border-radius:3px" class="mb-1"></div>
+                                        <span class="fw-700 d-block" style="font-size:.82rem">@lbl</span>
+                                        <span class="text-muted" style="font-size:.7rem">@range</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="SortOrder" class="form-label fw-600">Дараалал</label>
+                            <input asp-for="SortOrder" type="number" class="form-control rounded-3" min="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="StartsAt" class="form-label fw-600">Эхлэх огноо</label>
+                            <input asp-for="StartsAt" type="datetime-local" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EndsAt" class="form-label fw-600">Дуусах огноо</label>
+                            <input asp-for="EndsAt" type="datetime-local" class="form-control rounded-3" />
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" asp-for="IsActive"
+                               id="isActiveEdit" style="width:2.2em;height:1.2em" />
+                        <label class="form-check-label fw-600" for="isActiveEdit">Идэвхтэй</label>
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a asp-controller="Admin" asp-action="Banners"
+                           class="btn btn-light rounded-pill px-4">Болих</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 fw-700">
+                            <i class="bi bi-check me-2"></i>Шинэчлэх
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewEdit(input) {
+            if (!input.files?.[0]) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.getElementById('editPreview');
+                if (img) img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    </script>
+}

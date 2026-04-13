@@ -1,0 +1,86 @@
+﻿@*
+    Reusable 3-level location picker partial
+    ==========================================
+    Хэрхэн ашиглах:
+
+    @await Html.PartialAsync("_LocationPicker", new BairlyMN.Mvc.ViewModels.LocationPickerModel {
+        Prefix     = "create",
+        SelectedId = Model.LocationNodeId,
+        ShowLabel  = true
+    })
+
+    Partial дуудсан хуудсанд заавал дараах script байх ёстой:
+    <script src="~/js/location-picker.js"></script>
+    <script>
+        LocationPicker.init({ prefix: 'create', selectedId: @(Model.LocationNodeId?.ToString() ?? "null") });
+    </script>
+*@
+
+@model BairlyMN.Mvc.ViewModels.LocationPickerModel
+
+@{
+    var prefix = Model?.Prefix ?? "loc";
+    var showLabel = Model?.ShowLabel ?? true;
+}
+
+<div class="location-picker-wrapper" data-prefix="@prefix">
+    <div class="row g-2">
+
+        <!-- Level 1: Хот / Аймаг -->
+        <div class="col-12 col-md-4">
+            @if (showLabel)
+            {
+                <label class="form-label fw-600 small text-muted text-uppercase mb-1"
+                       for="@(prefix)_l1">
+                    <i class="bi bi-geo-alt me-1 text-success"></i>Хот / Аймаг
+                </label>
+            }
+            <select id="@(prefix)_l1"
+                    class="form-select rounded-3"
+                    aria-label="Хот / Аймаг">
+                <option value="">— Хот / Аймаг —</option>
+            </select>
+        </div>
+
+        <!-- Level 2: Дүүрэг / Сум -->
+        <div class="col-12 col-md-4">
+            @if (showLabel)
+            {
+                <label class="form-label fw-600 small text-muted text-uppercase mb-1"
+                       for="@(prefix)_l2">
+                    <i class="bi bi-building me-1 text-success"></i>Дүүрэг / Сум
+                </label>
+            }
+            <select id="@(prefix)_l2"
+                    class="form-select rounded-3"
+                    disabled
+                    aria-label="Дүүрэг / Сум">
+                <option value="">— Дүүрэг / Сум —</option>
+            </select>
+        </div>
+
+        <!-- Level 3: Хороо / Баг -->
+        <div class="col-12 col-md-4">
+            @if (showLabel)
+            {
+                <label class="form-label fw-600 small text-muted text-uppercase mb-1"
+                       for="@(prefix)_l3">
+                    <i class="bi bi-pin-map me-1 text-success"></i>Хороо / Баг
+                </label>
+            }
+            <select id="@(prefix)_l3"
+                    class="form-select rounded-3"
+                    disabled
+                    aria-label="Хороо / Баг">
+                <option value="">— Хороо / Баг —</option>
+            </select>
+        </div>
+
+    </div>
+
+    <!-- Hidden input — form submit хийхэд энэ утга илгээгдэнэ -->
+    <input type="hidden"
+           id="@(prefix)_final"
+           name="LocationNodeId"
+           value="@Model?.SelectedId" />
+</div>

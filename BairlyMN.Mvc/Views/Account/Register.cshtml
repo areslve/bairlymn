@@ -1,0 +1,206 @@
+﻿@model RegisterViewModel
+@{
+    ViewData["Title"] = "Бүртгүүлэх";
+    Layout = "_Layout";
+}
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
+     style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+    <div class="w-100" style="max-width: 500px; padding: 0 16px;">
+
+        <!-- Logo -->
+        <div class="text-center mb-4">
+            <a asp-controller="Home" asp-action="Index"
+                   class="text-decoration-none d-inline-flex align-items-center gap-2">
+                <i class="bi bi-house-heart-fill text-success" style="font-size:2rem"></i>
+                <span class="fw-800 text-success" style="font-size:1.5rem;letter-spacing:-0.5px">BairlyMN</span>
+            </a>
+            <p class="text-muted small mt-1 mb-0">Үл хөдлөх хөрөнгийн зах зээл</p>
+        </div>
+
+        <div class="card border-0 shadow-xl rounded-4 overflow-hidden">
+            <!-- Header -->
+            <div class="p-4 text-center"
+                 style="background:linear-gradient(135deg,#166534,#16a34a)">
+                <h4 class="fw-700 text-white mb-0">
+                    <i class="bi bi-person-plus me-2"></i>Шинэ данс үүсгэх
+                </h4>
+            </div>
+
+            <div class="card-body p-4">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger rounded-3 small d-flex align-items-start gap-2 mb-4">
+                        <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-1"></i>
+                        <div>
+                            @foreach (var error in ViewData.ModelState.Values
+                                                                      .SelectMany(v => v.Errors))
+                            {
+                                <div>@error.ErrorMessage</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <form asp-action="Register" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <!-- First Name + Last Name -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="FirstName" class="form-label fw-600">Нэр <span class="text-danger">*</span></label>
+                            <input asp-for="FirstName"
+                                   class="form-control rounded-3"
+                                   placeholder="Болд"
+                                   autofocus />
+                            <span asp-validation-for="FirstName" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="LastName" class="form-label fw-600">Овог <span class="text-danger">*</span></label>
+                            <input asp-for="LastName"
+                                   class="form-control rounded-3"
+                                   placeholder="Батаа" />
+                            <span asp-validation-for="LastName" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-600">
+                            И-мэйл хаяг <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Email"
+                               class="form-control rounded-3"
+                               placeholder="you@example.com"
+                               autocomplete="username" />
+                        <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label fw-600">Утасны дугаар</label>
+                        <input asp-for="PhoneNumber"
+                               class="form-control rounded-3"
+                               placeholder="+976 9900 0000" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-600">
+                            Нууц үг <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control rounded-start-3"
+                                   placeholder="Хамгийн багадаа 8 тэмдэгт"
+                                   autocomplete="new-password"
+                                   id="pwInput" />
+                            <button class="btn btn-light border rounded-end-3"
+                                    type="button"
+                                    onclick="togglePw('pwInput','eyePw')">
+                                <i class="bi bi-eye" id="eyePw"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                        <!-- Password strength -->
+                        <div class="mt-2" id="strengthBar" style="display:none">
+                            <div class="progress" style="height:4px;border-radius:4px">
+                                <div class="progress-bar" id="strengthFill"
+                                     role="progressbar" style="width:0%;transition:.3s"></div>
+                            </div>
+                            <small id="strengthLabel" class="text-muted"></small>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label fw-600">
+                            Нууц үг давтах <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="ConfirmPassword"
+                                   type="password"
+                                   class="form-control rounded-start-3"
+                                   placeholder="Нууц үгийг дахин оруулна уу"
+                                   autocomplete="new-password"
+                                   id="cpwInput" />
+                            <button class="btn btn-light border rounded-end-3"
+                                    type="button"
+                                    onclick="togglePw('cpwInput','eyeCpw')">
+                                <i class="bi bi-eye" id="eyeCpw"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="btn btn-success w-100 py-2 fw-600 rounded-3 mb-3">
+                        <i class="bi bi-person-check me-2"></i>Бүртгүүлэх
+                    </button>
+
+                    <p class="text-center text-muted small mb-0">
+                        Аль хэдийн данстай юу?
+                        <a asp-controller="Account" asp-action="Login"
+                               class="text-success fw-600 text-decoration-none">
+                            Нэвтрэх
+                        </a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+            <a asp-controller="Home" asp-action="Index"
+                   class="text-muted text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i>Нүүр хуудас руу буцах
+            </a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePw(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon  = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+
+        // Password strength indicator
+        document.getElementById('pwInput')?.addEventListener('input', function() {
+            const val = this.value;
+            const bar  = document.getElementById('strengthBar');
+            const fill = document.getElementById('strengthFill');
+            const lbl  = document.getElementById('strengthLabel');
+            if (!val) { bar.style.display = 'none'; return; }
+            bar.style.display = 'block';
+            let score = 0;
+            if (val.length >= 8)          score++;
+            if (/[A-Z]/.test(val))        score++;
+            if (/[0-9]/.test(val))        score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+            const levels = [
+                { pct: 25, color: '#ef4444', text: 'Маш сул' },
+                { pct: 50, color: '#f59e0b', text: 'Сул' },
+                { pct: 75, color: '#3b82f6', text: 'Дунд' },
+                { pct: 100, color: '#16a34a', text: 'Хүчтэй' }
+            ];
+            const lvl = levels[score - 1] || levels[0];
+            fill.style.width = lvl.pct + '%';
+            fill.style.background = lvl.color;
+            lbl.textContent = lvl.text;
+            lbl.style.color = lvl.color;
+        });
+    </script>
+}

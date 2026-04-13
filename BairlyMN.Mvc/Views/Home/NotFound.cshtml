@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "Хуудас олдсонгүй";
+}
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="mb-4">
+                <i class="bi bi-search text-muted" style="font-size:5rem"></i>
+            </div>
+            <h1 class="fw-800 mb-2" style="font-size:5rem;color:#e2e8f0">404</h1>
+            <h3 class="fw-700 mb-2">Хуудас олдсонгүй</h3>
+            <p class="text-muted mb-4">
+                Таны хайсан хуудас байхгүй байна.
+                Устгагдсан эсвэл зам буруу байж болзошгүй.
+            </p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a asp-controller="Home" asp-action="Index"
+                       class="btn btn-success rounded-pill px-5 fw-600">
+                    <i class="bi bi-house me-2"></i>Нүүр хуудас
+                </a>
+                <a asp-controller="Listings" asp-action="Index"
+                       class="btn btn-outline-success rounded-pill px-4 fw-600">
+                    <i class="bi bi-search me-2"></i>Зарууд харах
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

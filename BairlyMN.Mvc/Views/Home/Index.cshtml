@@ -1,0 +1,197 @@
+﻿@model HomeViewModel
+@{ ViewData["Title"] = "Нүүр хуудас"; }
+
+<!-- ══ HERO ════════════════════════════════════════════════════ -->
+<section class="hero-section position-relative overflow-hidden">
+        <div class="hero-slide hero-default">
+            <div class="hero-overlay"></div>
+            <div class="container position-relative text-white text-center py-5">
+                <h1 class="display-4 fw-800 mb-3">
+                    Монголын хамгийн том<br/>үл хөдлөх хөрөнгийн зах зээл
+                </h1>
+                <p class="lead mb-4 opacity-90">
+                    Орон сууц, байшин, газраа хялбархан зар, худалдаж ав
+                </p>
+            </div>
+        </div>
+    <!-- Hero search -->
+    <div class="hero-search-bar">
+        <div class="container">
+            <form asp-controller="Listings" asp-action="Index"
+                  method="get" class="hero-search-form shadow-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="Search"
+                                   class="form-control border-0 bg-white"
+                                   placeholder="Хайх... (гарчиг, байршил)" />
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <select name="PropertyType"
+                                class="form-select border-0 bg-white"
+                                style="border-radius:10px">
+                            <option value="">Бүх төрөл</option>
+                            <option value="1">🏢 Орон сууц</option>
+                            <option value="2">🏠 Байшин</option>
+                            <option value="3">🗺️ Газар</option>
+                            <option value="4">💼 Оффис</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <select name="TransactionType"
+                                class="form-select border-0 bg-white"
+                                style="border-radius:10px">
+                            <option value="">Худалдах/Түрээс</option>
+                            <option value="1">💰 Худалдах</option>
+                            <option value="2">🔑 Түрээслэх</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <select class="form-select border-0 bg-white"
+                                id="hero_level1"
+                                style="border-radius:10px"
+                                onchange="document.getElementById('hero_locId').value=this.value">
+                            <option value="">📍 Бүх байршил</option>
+                        </select>
+                        <input type="hidden" name="LocationNodeId" id="hero_locId" value="" />
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit"
+                                class="btn btn-success w-100 rounded-pill fw-700 py-2">
+                            <i class="bi bi-search me-2"></i>Хайх
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+
+
+
+<!-- ══ CATEGORIES ═══════════════════════════════════════════════ -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-800" style="letter-spacing:-.5px">Ангиллаар хайх</h2>
+            <p class="text-muted">Өөрт тохирсон ангиллаа сонгоно уу</p>
+        </div>
+        <div class="row g-3 justify-content-center">
+            @foreach (var cat in Model.Categories)
+            {
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a asp-controller="Listings" asp-action="Index"
+                       asp-route-CategoryId="@cat.Id"
+                       class="category-card text-decoration-none d-flex
+                              flex-column align-items-center justify-content-center
+                              p-4 h-100 text-center">
+                        <i class="@cat.IconClass text-success mb-2"
+                           style="font-size:2rem"></i>
+                        <span class="fw-600 text-dark small">@cat.Name</span>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- ══ LATEST LISTINGS ══════════════════════════════════════════ -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-5">
+            <div>
+                <h2 class="fw-800 mb-1" style="letter-spacing:-.5px">Шинэ зарууд</h2>
+                <p class="text-muted mb-0">
+                    Сүүлд нэмэгдсэн үл хөдлөх хөрөнгийн зарууд
+                </p>
+            </div>
+            <a asp-controller="Listings" asp-action="Index"
+               class="btn btn-outline-success rounded-pill px-4 fw-600 d-none d-md-inline-flex">
+                Бүгдийг харах
+                <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+
+        @if (!Model.LatestListings.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox" style="font-size:3.5rem;color:#cbd5e1"></i>
+                <p class="mt-3">Одоогоор зар байхгүй байна.</p>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Listings" asp-action="Create"
+                       class="btn btn-success rounded-pill px-5 fw-600">
+                        Анхны зараа нэмэх
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var listing in Model.LatestListings)
+                {
+                    <div class="col-sm-6 col-lg-3">
+                        @await Html.PartialAsync("_ListingCard", listing)
+                    </div>
+                }
+            </div>
+            <div class="text-center mt-4 d-md-none">
+                <a asp-controller="Listings" asp-action="Index"
+                   class="btn btn-outline-success rounded-pill px-5 fw-600">
+                    Бүгдийг харах
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ══ CTA ══════════════════════════════════════════════════════ -->
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <section class="py-5"
+             style="background:linear-gradient(135deg,#064e3b,#16a34a)">
+        <div class="container text-center text-white">
+            <h2 class="fw-800 mb-2">Зараа одоо нэмэх үү?</h2>
+            <p class="opacity-75 mb-4">
+                Бүртгүүлж, үл хөдлөх хөрөнгөө зарна уу. Үнэ төлбөргүй!
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a asp-controller="Account" asp-action="Register"
+                   class="btn fw-700 rounded-pill px-5 py-2"
+                   style="background:white;color:#16a34a">
+                    <i class="bi bi-person-plus me-2"></i>Бүртгүүлэх
+                </a>
+                <a asp-controller="Listings" asp-action="Index"
+                   class="btn btn-outline-light fw-600 rounded-pill px-5 py-2">
+                    <i class="bi bi-search me-2"></i>Зарууд харах
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+<script src="~/js/location-picker.js" asp-append-version="true"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const nodes = await fetch('/api/location/level1')
+        .then(r => r.ok ? r.json() : [])
+        .catch(() => []);
+
+    const sel = document.getElementById('hero_level1');
+    if (!sel) return;
+    nodes.forEach(n => {
+        const o = document.createElement('option');
+        o.value = n.id; o.textContent = n.name;
+        sel.appendChild(o);
+    });
+});
+</script>
+}

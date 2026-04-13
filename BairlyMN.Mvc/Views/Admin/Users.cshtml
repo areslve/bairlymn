@@ -1,0 +1,247 @@
+﻿@model IEnumerable<BairlyMN.Data.Entities.ApplicationUser>
+@{
+    ViewData["Title"] = "Хэрэглэгчид";
+    var userRoles = ViewBag.UserRoles as Dictionary<string, IList<string>>;
+    var pagination = ViewBag.Pagination as BairlyMN.Mvc.ViewModels.PaginationViewModel;
+    var search = ViewBag.Search as string;
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-800 mb-0">Хэрэглэгчид</h4>
+                <p class="text-muted small mb-0">
+                    Нийт <strong>@pagination?.TotalCount</strong> хэрэглэгч
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 rounded-4 shadow-sm p-3 text-center">
+                    <div class="fw-800 fs-3 text-success">@Model.Count()</div>
+                    <div class="text-muted small">Энэ хуудсанд</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 rounded-4 shadow-sm p-3 text-center">
+                    <div class="fw-800 fs-3" style="color:#7c3aed">
+                        @Model.Count(u => u.IsVerified)
+                    </div>
+                    <div class="text-muted small">Баталгаажсан</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 rounded-4 shadow-sm p-3 text-center">
+                    <div class="fw-800 fs-3" style="color:#0891b2">
+                        @Model.Count(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+                    </div>
+                    <div class="text-muted small">Сүүлийн 30 хоног</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 rounded-4 shadow-sm p-3 text-center">
+                    <div class="fw-800 fs-3" style="color:#16a34a">
+                        @Model.Count(u => !string.IsNullOrEmpty(u.AvatarPath))
+                    </div>
+                    <div class="text-muted small">Зурагтай</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form method="get" asp-controller="Admin" asp-action="Users"
+                      class="d-flex gap-2">
+                    <div class="input-group" style="max-width:360px">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search small text-muted"></i>
+                        </span>
+                        <input type="text" name="search" value="@search"
+                               class="form-control border-start-0"
+                               placeholder="Нэр, и-мэйл, утасны дугаараар хайх..." />
+                    </div>
+                    <button type="submit"
+                            class="btn btn-success rounded-3 px-4 fw-600">
+                        Хайх
+                    </button>
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <a asp-controller="Admin" asp-action="Users"
+                               class="btn btn-light rounded-3">
+                            <i class="bi bi-x"></i> Цэвэрлэх
+                        </a>
+                    }
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-people fs-1 d-block mb-3 opacity-40"></i>
+                    <p class="fw-600">
+                        @(string.IsNullOrEmpty(search)
+                            ? "Хэрэглэгч байхгүй байна"
+                            : "Хайлтад тохирох хэрэглэгч олдсонгүй")
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background:#f8fafc">
+                            <tr>
+                                @{
+                                    const string TH = "font-size:.72rem;font-weight:700;" +
+                                                      "text-transform:uppercase;letter-spacing:.08em;" +
+                                                      "color:#64748b;padding:14px 16px;border:none;white-space:nowrap";
+                                }
+                                <th class="ps-4" style="@TH">Хэрэглэгч</th>
+                                <th style="@TH">Холбоо барих</th>
+                                <th style="@TH">Роль</th>
+                                <th style="@TH">Бүртгэлийн огноо</th>
+                                <th style="@TH">Баталгаа</th>
+                                <th class="pe-4 text-end" style="@TH">Төлөв</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in Model)
+                            {
+                                var roles = userRoles?.GetValueOrDefault(u.Id)
+                                            ?? new List<string>();
+                                var isAdmin = roles.Contains("Admin");
+
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="position-relative flex-shrink-0">
+                                                <img src="@(u.AvatarPath ?? "/img/default-avatar.svg")"
+                                                     class="rounded-circle"
+                                                     width="42" height="42"
+                                                     style="object-fit:cover;
+                                                border:2px solid #e2e8f0"
+                                                     onerror="this.src='/img/default-avatar.svg'" />
+                                                @if (u.IsVerified)
+                                                {
+                                                    <i class="bi bi-patch-check-fill
+                                                    position-absolute bottom-0 end-0 text-info"
+                                                       style="font-size:12px;background:white;
+                                                    border-radius:50%"></i>
+                                                }
+                                            </div>
+                                            <div>
+                                                <div class="fw-700 small">@u.DisplayName</div>
+                                                <div class="text-muted" style="font-size:11px">
+                                                    @u.Email
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(u.PhoneNumber))
+                                        {
+                                            <a href="tel:@u.PhoneNumber"
+                                                   class="text-success small text-decoration-none">
+                                                <i class="bi bi-telephone me-1"></i>@u.PhoneNumber
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @foreach (var role in roles)
+                                        {
+                                            <span class="badge rounded-pill me-1"
+                                                  style="@(role == "Admin"
+                                                                                                                                                      ? "background:#ede9fe;color:#7c3aed"
+                                                                                                                                                      : "background:#f0fdf4;color:#166534")
+                                                font-size:.7rem;font-weight:600">
+                                                @role
+                                            </span>
+                                        }
+                                        @if (!roles.Any())
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="small text-dark">
+                                            @u.CreatedAt.ToString("yyyy/MM/dd")
+                                        </div>
+                                        <div style="font-size:11px;color:#64748b">
+                                            @u.CreatedAt.ToString("HH:mm")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (u.IsVerified)
+                                        {
+                                            <span class="badge rounded-pill fw-600"
+                                                  style="background:#cffafe;color:#0e7490;
+                                                font-size:.7rem">
+                                                <i class="bi bi-patch-check-fill me-1"></i>
+                                                Баталгаажсан
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill fw-600"
+                                                  style="background:#f1f5f9;color:#64748b;
+                                                font-size:.7rem">
+                                                Баталгаажаагүй
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <span class="badge rounded-pill fw-600"
+                                              style="background:#dcfce7;color:#166534;
+                                            font-size:.7rem">
+                                            ● Идэвхтэй
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (pagination != null && pagination.TotalPages > 1)
+                {
+                    <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            @pagination.CurrentPage / @pagination.TotalPages хуудас
+                            (нийт @pagination.TotalCount)
+                        </span>
+                        <nav>
+                            <ul class="pagination pagination-sm gap-1 mb-0">
+                                @for (int p = 1; p <= pagination.TotalPages; p++)
+                                {
+                                    <li class="page-item @(p == pagination.CurrentPage ? "active" : "")">
+                                        <a class="page-link rounded-3"
+                                           asp-controller="Admin"
+                                           asp-action="Users"
+                                           asp-route-search="@search"
+                                           asp-route-page="@p">@p</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
