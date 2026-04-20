@@ -70,13 +70,15 @@ public class ChatService : IChatService
             .OrderByDescending(c => c.LastMessageAt)
             .ToListAsync();
 
-    public async Task<ChatMessage> SendMessageAsync(int conversationId, string senderId, string content)
+    public async Task<ChatMessage> SendMessageAsync(int conversationId, string senderId,
+    string content, string? imagePath = null)
     {
         var message = new ChatMessage
         {
             ConversationId = conversationId,
             SenderId = senderId,
-            Content = content.Trim(),
+            Content = content,
+            ImagePath = imagePath,      // ← нэмэх
             SentAt = DateTime.UtcNow,
             Status = MessageStatus.Sent
         };

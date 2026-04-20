@@ -63,6 +63,7 @@ public class ChatMessageDto
     public string SenderName { get; set; } = string.Empty;
     public string? SenderAvatar { get; set; }
     public string Content { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }          // ← нэмэх
     public string SentAt { get; set; } = string.Empty;
 }
 

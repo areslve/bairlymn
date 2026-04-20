@@ -1,0 +1,149 @@
+﻿@* Views/Admin/GrantAgent.cshtml *@
+@{
+    ViewData["Title"] = "Агент эрх олгох";
+    var user = ViewBag.User as BairlyMN.Data.Entities.ApplicationUser;
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container py-4" style="max-width:560px">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a asp-controller="Admin" asp-action="Agents"
+               class="btn btn-light rounded-circle"
+               style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="fw-800 mb-0">Агент эрх олгох</h4>
+        </div>
+
+        <!-- Хэрэглэгчийн мэдээлэл -->
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="@(user?.AvatarPath ?? "/img/default-avatar.svg")"
+                         class="rounded-circle"
+                         width="56" height="56"
+                         style="object-fit:cover;border:3px solid #dcfce7"
+                         onerror="this.src='/img/default-avatar.svg'" />
+                    <div>
+                        <div class="fw-700">@user?.DisplayName</div>
+                        <div class="text-muted small">@user?.Email</div>
+                        @if (user?.HasActiveAgent == true)
+                        {
+                            <span class="badge rounded-pill mt-1"
+                                  style="background:#dcfce7;color:#166534;font-size:.68rem">
+                                <i class="bi bi-patch-check-fill me-1"></i>
+                                Агент — @user.AgentUntil?.ToString("yyyy-MM-dd") хүртэл
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Эрх олгох form -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header p-4"
+                 style="background:linear-gradient(135deg,#166534,#16a34a)">
+                <h5 class="fw-700 text-white mb-0">
+                    <i class="bi bi-patch-check me-2"></i>Агент эрх олгох
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="/Admin/GrantAgent">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@user?.Id" />
+
+                    <!-- Хугацаа — tuple deconstruction ашиглахгүй -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600 d-block mb-2">Хугацаа сонгох</label>
+                        <div class="row g-2">
+
+                            <div class="col-6">
+                                <input type="radio" class="btn-check"
+                                       name="months" id="m_1" value="1" />
+                                <label class="btn btn-outline-secondary w-100 rounded-3 p-3 text-start grant-month-btn"
+                                       for="m_1">
+                                    <span class="fw-700 d-block">1 сар</span>
+                                    <span class="text-muted small">30,000₮</span>
+                                </label>
+                            </div>
+
+                            <div class="col-6">
+                                <input type="radio" class="btn-check"
+                                       name="months" id="m_3" value="3" checked />
+                                <label class="btn btn-outline-secondary w-100 rounded-3 p-3 text-start grant-month-btn"
+                                       for="m_3">
+                                    <span class="fw-700 d-block">3 сар</span>
+                                    <span class="text-muted small">75,000₮</span>
+                                </label>
+                            </div>
+
+                            <div class="col-6">
+                                <input type="radio" class="btn-check"
+                                       name="months" id="m_6" value="6" />
+                                <label class="btn btn-outline-secondary w-100 rounded-3 p-3 text-start grant-month-btn"
+                                       for="m_6">
+                                    <span class="fw-700 d-block">6 сар</span>
+                                    <span class="text-muted small">120,000₮</span>
+                                </label>
+                            </div>
+
+                            <div class="col-6">
+                                <input type="radio" class="btn-check"
+                                       name="months" id="m_12" value="12" />
+                                <label class="btn btn-outline-secondary w-100 rounded-3 p-3 text-start grant-month-btn"
+                                       for="m_12">
+                                    <span class="fw-700 d-block">12 сар</span>
+                                    <span class="text-muted small">200,000₮</span>
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Тэмдэглэл -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600">
+                            Тэмдэглэл
+                            <span class="text-muted fw-400 small">(заавал биш)</span>
+                        </label>
+                        <input type="text" name="note" class="form-control rounded-3"
+                               placeholder="Жишээ: Гүйлгээний дугаар #12345" />
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a asp-controller="Admin" asp-action="Agents"
+                           class="btn btn-light rounded-pill px-4">Болих</a>
+                        <button type="submit"
+                                class="btn btn-success rounded-pill px-5 fw-700">
+                            <i class="bi bi-patch-check me-2"></i>Эрх олгох
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Styles {
+<style>
+.grant-month-btn {
+    border: 1.5px solid #e2e8f0 !important;
+    transition: all .15s;
+    cursor: pointer;
+}
+.grant-month-btn:hover {
+    border-color: #16a34a !important;
+    background: #f0fdf4 !important;
+}
+.btn-check:checked + .grant-month-btn {
+    border-color: #16a34a !important;
+    background: #dcfce7 !important;
+    color: #166534 !important;
+}
+</style>
+}

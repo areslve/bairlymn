@@ -1,0 +1,220 @@
+﻿@* Views/Admin/Agents.cshtml *@
+@model IEnumerable<BairlyMN.Data.Entities.ApplicationUser>
+@{
+    ViewData["Title"] = "Агентууд";
+    var pending = ViewBag.PendingRequests as List<BairlyMN.Data.Entities.AgentRequest>
+                  ?? new();
+}
+
+@await Html.PartialAsync("_AdminNav")
+
+<div style="background:#f8fafc;min-height:calc(100vh - 110px)">
+    <div class="container-fluid px-4 py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-800 mb-0">Агент удирдах</h4>
+                <p class="text-muted small mb-0">
+                    @Model.Count() идэвхтэй агент
+                    @if (pending.Any())
+                    {
+                        <span class="badge bg-warning rounded-pill ms-2">
+                            @pending.Count хүсэлт хүлээгдэж байна
+                        </span>
+                    }
+                </p>
+            </div>
+            <!-- Хугацаа дууссан agent-уудыг цэвэрлэх -->
+            <form asp-controller="Admin" asp-action="ExpireAgents" method="post">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-sm btn-light rounded-pill fw-600"
+                        onclick="return confirm('Хугацаа дууссан агентуудыг цэвэрлэх үү?')">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Хугацаа шалгах
+                </button>
+            </form>
+        </div>
+
+        <!-- Хүлээгдэж буй хүсэлтүүд -->
+        @if (pending.Any())
+        {
+            <div class="card border-0 rounded-4 shadow-sm mb-4"
+                 style="border-left:4px solid #f59e0b!important">
+                <div class="card-body p-4">
+                    <h6 class="fw-700 mb-3 text-warning">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        Хүлээгдэж буй хүсэлтүүд (@pending.Count)
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Хэрэглэгч</th>
+                                    <th>Мессеж</th>
+                                    <th>Огноо</th>
+                                    <th>Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var req in pending)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="@(req.User.AvatarPath ?? "/img/default-avatar.svg")"
+                                                     class="rounded-circle"
+                                                     width="32" height="32"
+                                                     style="object-fit:cover" />
+                                                <div>
+                                                    <div class="fw-600 small">@req.User.DisplayName</div>
+                                                    <div class="text-muted" style="font-size:.75rem">
+                                                        @req.User.Email
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted small">
+                                                @(req.Message?.Length > 60
+                                                    ? req.Message[..60] + "…"
+                                                    : req.Message ?? "—")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="small text-muted">
+                                                @req.CreatedAt.ToString("MM/dd HH:mm")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a asp-controller="Admin"
+                                                   asp-action="GrantAgent"
+                                                   asp-route-userId="@req.UserId"
+                                                   class="btn btn-sm btn-success rounded-pill fw-600">
+                                                <i class="bi bi-check-circle me-1"></i>Эрх олгох
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Идэвхтэй агентууд -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-person-badge fs-1 d-block mb-3 opacity-30"></i>
+                        <p>Одоогоор агент байхгүй байна</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Хэрэглэгч</th>
+                                    <th>Дуусах огноо</th>
+                                    <th>Үлдсэн хоног</th>
+                                    <th>Статус</th>
+                                    <th>Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model)
+                                {
+                                    var daysLeft = user.AgentUntil.HasValue
+                                        ? (int)(user.AgentUntil.Value - DateTime.UtcNow).TotalDays
+                                        : 0;
+                                    var isExpiring = daysLeft <= 7 && daysLeft > 0;
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="@(user.AvatarPath ?? "/img/default-avatar.svg")"
+                                                     class="rounded-circle"
+                                                     width="36" height="36"
+                                                     style="object-fit:cover;border:2px solid #dcfce7" />
+                                                <div>
+                                                    <div class="fw-700 small d-flex align-items-center gap-1">
+                                                        @user.DisplayName
+                                                        <span class="badge rounded-pill"
+                                                              style="background:#dcfce7;color:#166534;font-size:.65rem">
+                                                            <i class="bi bi-patch-check-fill me-1"></i>Агент
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-muted" style="font-size:.75rem">@user.Email</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="small @(daysLeft <= 0 ? "text-danger" : isExpiring ? "text-warning" : "text-muted")">
+                                                @(user.AgentUntil.HasValue
+                                                    ? user.AgentUntil.Value.ToString("yyyy-MM-dd")
+                                                    : "—")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (daysLeft <= 0)
+                                            {
+                                                <span class="badge bg-danger rounded-pill">Дууссан</span>
+                                            }
+                                            else if (isExpiring)
+                                            {
+                                                <span class="badge bg-warning rounded-pill">@daysLeft өдөр</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success-subtle text-success rounded-pill">
+                                                    @daysLeft өдөр
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (user.HasActiveAgent)
+                                            {
+                                                <span class="badge rounded-pill"
+                                                      style="background:#dcfce7;color:#166534">
+                                                    ● Идэвхтэй
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary rounded-pill">Идэвхгүй</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a asp-controller="Admin"
+                                                       asp-action="GrantAgent"
+                                                       asp-route-userId="@user.Id"
+                                                       class="btn btn-sm rounded-3 fw-600"
+                                                       style="background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe">
+                                                    <i class="bi bi-plus-circle me-1"></i>Сунгах
+                                                </a>
+                                                <form asp-controller="Admin"
+                                                      asp-action="RevokeAgent"
+                                                      asp-route-userId="@user.Id"
+                                                      method="post"
+                                                      onsubmit="return confirm('Агент эрхийг хасах уу?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button class="btn btn-sm rounded-3"
+                                                            style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

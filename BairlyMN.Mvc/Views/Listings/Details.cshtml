@@ -51,7 +51,7 @@
 
                 <!-- Main image — tappable -->
                 <div class="gallery-main-wrap rounded-3 overflow-hidden shadow-sm mb-2 position-relative"
-                     style="background:#0f172a">
+                     style="background:#0f172a; aspect-ratio:4/3;">
                     <img id="mainGalleryImg"
                          src="@images[0].ImagePath"
                          class="w-100 gallery-main-img"
@@ -59,7 +59,7 @@
                          onerror="this.src='/img/no-image.svg'"
                          data-index="0"
                          onclick="openLightbox(0)"
-                         style="cursor:zoom-in" />
+                         style="cursor:zoom-in; width:100%; height:100%; object-fit:cover; display:block; transition:opacity .15s;" />
 
                     <!-- Image counter -->
                     <div class="position-absolute bottom-0 end-0 m-2">
@@ -96,7 +96,25 @@
                 </div>
 
                 <!-- Thumbnails -->
-                
+                @if (images.Count > 1)
+                {
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        @for (int i = 0; i < images.Count; i++)
+                        {
+                            <div onclick="setImage(@i)"
+                                 class="gallery-thumb @(i == 0 ? "active" : "")"
+                                 data-index="@i"
+                                 style="width:72px; height:54px; border-radius:8px; overflow:hidden; cursor:pointer;
+                                border:2px solid @(i == 0 ? "#16a34a" : "transparent");
+                                flex-shrink:0; transition:border-color .15s;">
+                                <img src="@images[i].ImagePath"
+                                     onerror="this.src='/img/no-image.svg'"
+                                     alt="Зураг @(i + 1)"
+                                     style="width:100%; height:100%; object-fit:cover; display:block;" />
+                            </div>
+                        }
+                    </div>
+                }
 
                 <!-- Lightbox Modal -->
                 <div class="modal fade" id="lightboxModal" tabindex="-1"
@@ -520,6 +538,95 @@
 </div>
 
 @section Scripts {
+    
+<style>
+.gallery-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity .15s;
+}
+.gallery-thumb {
+    width: 72px;
+    height: 54px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+    transition: border-color .15s;
+}
+.gallery-thumb.active {
+    border-color: #16a34a;
+}
+.gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,.55);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    z-index: 10;
+    cursor: pointer;
+    transition: background .15s;
+    backdrop-filter: blur(4px);
+}
+.gallery-arrow:hover { background: rgba(0,0,0,.75); }
+.gallery-arrow-prev { left: 10px; }
+.gallery-arrow-next { right: 10px; }
+
+/* Lightbox том товч */
+.lb-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,.15);
+    border: 2px solid rgba(255,255,255,.4);
+    color: white;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    z-index: 10;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    backdrop-filter: blur(6px);
+}
+.lb-arrow:hover {
+    background: rgba(255,255,255,.28);
+    border-color: rgba(255,255,255,.7);
+}
+.lb-arrow-prev { left: 16px; }
+.lb-arrow-next { right: 16px; }
+.lb-main-img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+    transition: opacity .12s;
+}
+.lb-thumb {
+    width: 60px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: border-color .15s;
+}
+.lb-thumb.active { border-color: #16a34a; }
+</style>
     <script>
         /* ── Gallery ──────────────────────────────────────────────────── */
         let currentIndex = 0;

@@ -1,6 +1,7 @@
 using BairlyMN.Data;
 using BairlyMN.Data.Entities;
 using BairlyMN.Mvc.Hubs;
+using BairlyMN.Mvc.Infrastructure;
 using BairlyMN.Services.Implementations;
 using BairlyMN.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -28,9 +29,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, BairlyMN.Mvc.Infrastructure.CustomClaimsFactory>();
+// ── Custom Claims Factory (агент claim-ууд нэмнэ)
+builder.Services.AddScoped<
+    IUserClaimsPrincipalFactory<ApplicationUser>,
+    CustomClaimsPrincipalFactory>();
 
-// ── Cookie paths — MVC AccountController руу, Identity Area руу биш
+// ── Cookie paths
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -65,7 +69,13 @@ builder.Services.AddSession(o =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+Console.WriteLine("ENV = " + app.Environment.EnvironmentName);
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
@@ -73,9 +83,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
-
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
@@ -101,14 +109,10 @@ static async Task SeedAsync(WebApplication app)
 
     await db.Database.MigrateAsync();
 
-    // Roles
     foreach (var role in new[] { "Admin", "User" })
-    {
         if (!await roles.RoleExistsAsync(role))
             await roles.CreateAsync(new IdentityRole(role));
-    }
 
-    // Admin user
     const string adminEmail = "admin@bairly.mn";
     if (await users.FindByEmailAsync(adminEmail) == null)
     {
@@ -121,13 +125,11 @@ static async Task SeedAsync(WebApplication app)
             EmailConfirmed = true,
             CreatedAt = DateTime.UtcNow
         };
-
         var result = await users.CreateAsync(admin, "Admin@12345");
         if (result.Succeeded)
             await users.AddToRoleAsync(admin, "Admin");
     }
 
-    // Categories
     if (!db.Categories.Any())
     {
         db.Categories.AddRange(
@@ -138,17 +140,14 @@ static async Task SeedAsync(WebApplication app)
             new Category { Name = "Агуулах", IconClass = "bi bi-box-seam", SortOrder = 5 },
             new Category { Name = "Бусад", IconClass = "bi bi-three-dots", SortOrder = 6 }
         );
-
         await db.SaveChangesAsync();
     }
 
-    // Locations — JSON seed
     if (!db.LocationNodes.Any())
     {
         var jsonPath = Path.Combine(
             Directory.GetCurrentDirectory(),
             "Data", "Seed", "locations.json");
-
         await BairlyMN.Data.Seeding.LocationSeeder.SeedAsync(db, jsonPath);
     }
 }

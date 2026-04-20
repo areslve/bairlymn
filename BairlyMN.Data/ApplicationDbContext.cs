@@ -1,4 +1,6 @@
-﻿using BairlyMN.Data.Entities;
+﻿// BairlyMN.Data/ApplicationDbContext.cs
+
+using BairlyMN.Data.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +22,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<Favorite> Favorites => Set<Favorite>();
+    // ── Шинэ ──────────────────────────────────────────────────────
+    public DbSet<AgentSubscription> AgentSubscriptions => Set<AgentSubscription>();
+    public DbSet<AgentRequest> AgentRequests => Set<AgentRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -105,15 +110,53 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         });
 
         builder.Entity<Favorite>()
-     .HasOne(f => f.User)
-     .WithMany(u => u.Favorites)
-     .HasForeignKey(f => f.UserId)
-     .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(f => f.User)
+            .WithMany(u => u.Favorites)
+            .HasForeignKey(f => f.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<Favorite>()
             .HasOne(f => f.Listing)
             .WithMany(l => l.Favorites)
             .HasForeignKey(f => f.ListingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ── AgentSubscription ──────────────────────────────────────
+        builder.Entity<AgentSubscription>(e =>
+        {
+            e.HasOne(s => s.User)
+             .WithMany(u => u.AgentSubscriptions)
+             .HasForeignKey(s => s.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(s => s.GrantedByAdmin)
+             .WithMany()
+             .HasForeignKey(s => s.GrantedByAdminId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.Property(s => s.Note).HasMaxLength(500);
+        });
+
+        // ── AgentRequest ───────────────────────────────────────────
+        builder.Entity<AgentRequest>(e =>
+        {
+            e.HasOne(r => r.User)
+             .WithMany(u => u.AgentRequests)
+             .HasForeignKey(r => r.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(r => r.ReviewedByAdmin)
+             .WithMany()
+             .HasForeignKey(r => r.ReviewedByAdminId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.Conversation)
+             .WithMany()
+             .HasForeignKey(r => r.ConversationId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.Property(r => r.Message).HasMaxLength(1000);
+            e.Property(r => r.AdminNote).HasMaxLength(500);
+        });
     }
 }

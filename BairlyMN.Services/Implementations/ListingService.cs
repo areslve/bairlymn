@@ -13,19 +13,21 @@ public class ListingService : IListingService
     public ListingService(ApplicationDbContext db) => _db = db;
 
     public async Task<(IEnumerable<Listing> Items, int TotalCount)> GetPagedListingsAsync(
-        int page, int pageSize,
-        string? search = null,
-        PropertyType? propertyType = null,
-        TransactionType? transactionType = null,
-        int? locationNodeId = null,
-        decimal? minPrice = null,
-        decimal? maxPrice = null,
-        int? categoryId = null,
-        decimal? minArea = null,
-        decimal? maxArea = null,
-        int? minRooms = null,
-        int? maxRooms = null)
+       int page, int pageSize,
+       string? search = null,
+       PropertyType? propertyType = null,
+       TransactionType? transactionType = null,
+       int? locationNodeId = null,
+       decimal? minPrice = null,
+       decimal? maxPrice = null,
+       int? categoryId = null,
+       decimal? minArea = null,
+       decimal? maxArea = null,
+       int? minRooms = null,
+       int? maxRooms = null)
     {
+        var now = DateTime.UtcNow;
+
         var query = _db.Listings
             .AsNoTracking()
             .Where(l => l.Status == ListingStatus.Active)
@@ -36,10 +38,12 @@ public class ListingService : IListingService
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
+        {
             query = query.Where(l =>
                 l.Title.Contains(search) ||
                 l.Description.Contains(search) ||
                 (l.Address != null && l.Address.Contains(search)));
+        }
 
         if (propertyType.HasValue)
             query = query.Where(l => l.PropertyType == propertyType.Value);
@@ -49,7 +53,6 @@ public class ListingService : IListingService
 
         if (locationNodeId.HasValue)
         {
-            // Include all child nodes of selected location
             var childIds = await GetAllChildIdsAsync(locationNodeId.Value);
             childIds.Add(locationNodeId.Value);
             query = query.Where(l => l.LocationNodeId != null && childIds.Contains(l.LocationNodeId.Value));
@@ -71,19 +74,28 @@ public class ListingService : IListingService
             query = query.Where(l => l.Area <= maxArea.Value);
 
         if (minRooms.HasValue)
+        {
             query = query.Where(l =>
-                l.ApartmentDetails != null && l.ApartmentDetails.Rooms >= minRooms.Value ||
-                l.HouseDetails != null && l.HouseDetails.Rooms >= minRooms.Value);
+                (l.ApartmentDetails != null && l.ApartmentDetails.Rooms >= minRooms.Value) ||
+                (l.HouseDetails != null && l.HouseDetails.Rooms >= minRooms.Value));
+        }
 
         if (maxRooms.HasValue)
+        {
             query = query.Where(l =>
-                l.ApartmentDetails != null && l.ApartmentDetails.Rooms <= maxRooms.Value ||
-                l.HouseDetails != null && l.HouseDetails.Rooms <= maxRooms.Value);
+                (l.ApartmentDetails != null && l.ApartmentDetails.Rooms <= maxRooms.Value) ||
+                (l.HouseDetails != null && l.HouseDetails.Rooms <= maxRooms.Value));
+        }
 
         var total = await query.CountAsync();
 
         var items = await query
-            .OrderByDescending(l => l.IsPromoted)
+            .OrderByDescending(l =>
+                l.User != null &&
+                l.User.IsAgent &&
+                l.User.AgentUntil.HasValue &&
+                l.User.AgentUntil >= now)
+            .ThenByDescending(l => l.IsPromoted)
             .ThenByDescending(l => l.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

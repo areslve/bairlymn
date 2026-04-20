@@ -103,7 +103,7 @@
                                 </div>
                             </div>
 
-                            <!-- Үл хөдлөхийн төрөл -->
+                            @* Үл хөдлөхийн төрөл — хуучин бүх хэсгийг энэгээр солих *@
                             <div class="mb-3">
                                 <label class="filter-label">Үл хөдлөхийн төрөл</label>
                                 <div class="d-flex flex-column gap-1">
@@ -111,23 +111,26 @@
                                         var pt = Model.Filter.PropertyType;
                                         var ptItems = new[]
                                         {
-                                            ("", "bi-grid", "Бүгд"),
+                                            ("",  "bi-grid",     "Бүгд"),
                                             ("1", "bi-building", "Орон сууц"),
-                                            ("2", "bi-house-door", "Байшин"),
-                                            ("3", "bi-map", "Газар"),
-                                            ("4", "bi-briefcase", "Оффис"),
+                                            ("2", "bi-house-door","Байшин"),
+                                            ("3", "bi-map",      "Газар"),
+                                            ("4", "bi-briefcase","Оффис"),
                                             ("5", "bi-box-seam", "Агуулах"),
                                         };
                                     }
                                     @foreach (var (val, icon, label) in ptItems)
                                     {
-                                        var isChecked = val == "" ? pt == null : pt?.ToString() == EnumName(val);
-                                        <div class="filter-check @(isChecked ? "active" : "")">
+                                        var isChecked = val == "" ? pt == null
+                                                      : pt?.ToString() == EnumName(val);
+                                        <div class="filter-check @(isChecked ? "active" : "")"
+                                             onclick="this.querySelector('input').click()">
                                             <input class="form-check-input" type="radio"
                                                    name="PropertyType" id="pt_@val" value="@val"
-                                                   @(isChecked ? "checked" : "") />
+                                                   @(isChecked ? "checked" : "")
+                                                   onchange="this.closest('form').submit()" />
                                             <label class="form-check-label w-100 d-flex align-items-center gap-2"
-                                                   for="pt_@val">
+                                                   for="pt_@val" onclick="event.stopPropagation()">
                                                 <i class="bi @icon text-success"
                                                    style="font-size:.85rem;width:16px"></i>
                                                 <span style="font-size:.85rem">@label</span>
@@ -158,20 +161,7 @@
                                 </div>
                             </div>
 
-                            <!-- Ангилал -->
-                            <div class="mb-3">
-                                <label class="filter-label">Ангилал</label>
-                                <select name="CategoryId" class="form-select form-select-sm rounded-3">
-                                    <option value="">Бүгд</option>
-                                    @foreach (var c in Model.Categories)
-                                    {
-                                        <option value="@c.Value"
-                                                selected="@(Model.Filter.CategoryId?.ToString() == c.Value ? "selected" : null)">
-                                            @c.Text
-                                        </option>
-                                    }
-                                </select>
-                            </div>
+                          
 
                             <!-- Үнийн хязгаар -->
                             <div class="mb-3">

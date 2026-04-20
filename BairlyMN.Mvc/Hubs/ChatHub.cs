@@ -50,6 +50,7 @@ public class ChatHub : Hub
     public async Task LeaveConversation(int conversationId)
         => await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conv_{conversationId}");
 
+    // SendMessage method-ийг ингэж солих
     public async Task SendMessage(int conversationId, string content)
     {
         if (string.IsNullOrWhiteSpace(content)) return;
@@ -57,7 +58,7 @@ public class ChatHub : Hub
         var conv = await _chat.GetConversationByIdAsync(conversationId, uid);
         if (conv == null) return;
 
-        var msg = await _chat.SendMessageAsync(conversationId, uid, content);
+        var msg = await _chat.SendMessageAsync(conversationId, uid, content, null); // ← null нэмэх
 
         var dto = new ChatMessageDto
         {
@@ -67,6 +68,7 @@ public class ChatHub : Hub
             SenderName = msg.Sender.DisplayName,
             SenderAvatar = msg.Sender.AvatarPath ?? "/img/default-avatar.svg",
             Content = msg.Content,
+            ImageUrl = null,
             SentAt = msg.SentAt.ToString("HH:mm")
         };
 

@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "GrantAgent layout test";
+    var user = ViewBag.User as BairlyMN.Data.Entities.ApplicationUser;
+}
+
+<div>Layout test: @user?.Email</div>
+
+<h2>GrantAgent full test</h2>
+
+<div>@user?.DisplayName</div>
+<div>@user?.Email</div>
+
+<form asp-controller="Admin" asp-action="GrantAgent" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="userId" value="@user?.Id" />
+
+    <div>
+        <input type="radio" name="months" id="m1" value="1" />
+        <label for="m1">1 сар</label>
+    </div>
+
+    <div>
+        <input type="radio" name="months" id="m3" value="3" checked />
+        <label for="m3">3 сар</label>
+    </div>
+
+    <input type="text" name="note" />
+    <button type="submit">Эрх олгох</button>
+</form>

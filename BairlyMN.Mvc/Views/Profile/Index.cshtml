@@ -3,6 +3,10 @@
     ViewData["Title"] = "Профайл";
     var u = Model.User;
     var uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    // Агент мэдээлэл
+    var isAgent = u.HasActiveAgent;
+    var agentUntil = u.AgentUntil;
 }
 
 <!-- Hero -->
@@ -27,8 +31,19 @@
                     </span>
                 }
             </div>
+
             <div class="flex-grow-1 text-center text-md-start">
-                <h2 class="fw-800 mb-1">@u.DisplayName</h2>
+                <div class="d-flex align-items-center justify-content-center
+                    justify-content-md-start gap-2 flex-wrap mb-1">
+                    <h2 class="fw-800 mb-0">@u.DisplayName</h2>
+                    @if (isAgent)
+                    {
+                        <span class="agent-profile-badge">
+                            <i class="bi bi-patch-check-fill"></i>Агент
+                        </span>
+                    }
+                </div>
+
                 <p class="opacity-75 small mb-0">
                     <i class="bi bi-envelope me-2"></i>@u.Email
                 </p>
@@ -46,7 +61,43 @@
                     <i class="bi bi-calendar3 me-1"></i>
                     @u.CreatedAt.ToString("yyyy оны MM сар") -аас хэрэглэж байна
                 </p>
+
+                <!-- Agent status / button -->
+                <div class="mt-2">
+                    @if (isAgent)
+                    {
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill"
+                             style="background:rgba(255,255,255,.15);
+                            backdrop-filter:blur(8px);
+                            border:1px solid rgba(255,255,255,.25)">
+                            <i class="bi bi-patch-check-fill text-warning"></i>
+                            <span class="text-white fw-600 small">Идэвхтэй агент</span>
+                            @if (agentUntil.HasValue)
+                            {
+                                <span class="text-white-50 small">
+                                    — @agentUntil.Value.ToString("yyyy/MM/dd") хүртэл
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Agent" asp-action="Pricing"
+                               class="d-inline-flex align-items-center gap-2 px-3 py-2
+                            rounded-pill text-decoration-none"
+                               style="background:rgba(255,255,255,.12);
+                            backdrop-filter:blur(8px);
+                            border:1px solid rgba(255,255,255,.2);
+                            transition:all .2s">
+                            <i class="bi bi-patch-check text-white-50"></i>
+                            <span class="text-white-50 small fw-500">Агент болох</span>
+                            <i class="bi bi-arrow-right text-white-50"
+                               style="font-size:.75rem"></i>
+                        </a>
+                    }
+                </div>
             </div>
+
             <a asp-action="Edit"
                    class="btn btn-light rounded-pill px-4 fw-600 flex-shrink-0">
                 <i class="bi bi-pencil me-2"></i>Профайл засах
@@ -186,8 +237,7 @@
                     <i class="bi bi-chat-square" style="font-size:4rem;color:#cbd5e1"></i>
                     <h5 class="fw-700 text-muted mt-3">Яриа байхгүй</h5>
                     <p class="text-muted small">
-                        Зарын дэлгэрэнгүйд орж
-                        "Холбоо барих" дарснаар яриа эхлэнэ
+                        Зарын дэлгэрэнгүйд орж "Холбоо барих" дарснаар яриа эхлэнэ
                     </p>
                     <a asp-controller="Listings" asp-action="Index"
                            class="btn btn-outline-success rounded-pill px-5 fw-600">
@@ -200,9 +250,7 @@
                 <div class="list-group list-group-flush rounded-4 shadow-sm overflow-hidden">
                     @foreach (var conv in Model.Conversations)
                     {
-                        var other = conv.InitiatorId == uid
-                            ? conv.Participant
-                            : conv.Initiator;
+                        var other = conv.InitiatorId == uid ? conv.Participant : conv.Initiator;
                         var lastMsg = conv.Messages?
                             .OrderByDescending(m => m.SentAt)
                             .FirstOrDefault();
@@ -221,9 +269,7 @@
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <span class="fw-600 text-dark">
-                                        @other?.DisplayName
-                                    </span>
+                                    <span class="fw-600 text-dark">@other?.DisplayName</span>
                                     <small class="text-muted flex-shrink-0 ms-2">
                                         @conv.LastMessageAt.ToString("MM/dd HH:mm")
                                     </small>
